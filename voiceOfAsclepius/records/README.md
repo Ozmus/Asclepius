@@ -1,0 +1,1 @@
+Records will be saved in here. After speech to text, they will be deleted.
