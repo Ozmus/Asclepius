@@ -36,7 +36,7 @@ exports.stopRecording = async function(message){
 }
 
 var inputStream;
-var fileName = __dirname+ "/records/merge.pcm";
+var fileName = __dirname+ "/records/merge" + Date.now() + ".pcm";
 const outputStream = fs.createWriteStream(fileName);
 
 function mergePCM(chunks,filePath) {
