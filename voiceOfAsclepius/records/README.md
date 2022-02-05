@@ -1,1 +1,1 @@
-Records will be saved in here. After speech to text, they will be deleted.
+Records will be saved in here. After merging, they will be deleted and merged pcm file is moved into a directory named member id.
