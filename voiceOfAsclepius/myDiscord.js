@@ -45,7 +45,7 @@ client.on("message", async message => {
 });
 
 var inputStream;
-var fileName = __dirname+ "/records/merge" + Date.now() + ".pcm";
+var fileName = __dirname+ "/records/merge.pcm";
 const outputStream = fs.createWriteStream(fileName);
 
 function mergePCM(chunks,filePath) {
