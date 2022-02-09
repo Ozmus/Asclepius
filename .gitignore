@@ -2,3 +2,4 @@
 .env
 asclepius-spotify-data.json
 venv
+__pycache__
