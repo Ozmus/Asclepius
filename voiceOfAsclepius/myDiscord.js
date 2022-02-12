@@ -7,9 +7,15 @@ client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}!`)
 })
 
+var inputStream;
+var outputStream;
+
 client.on("message", async message => {
 
     if (message.content === ">record") {
+
+            var fileName = __dirname+ "/records/merge.pcm";
+            outputStream = fs.createWriteStream(fileName);
             const voiceChannelId = message.member.voice.channel.id;
             const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
             await voiceChannel.join().then(
@@ -43,10 +49,6 @@ client.on("message", async message => {
     }
 
 });
-
-var inputStream;
-var fileName = __dirname+ "/records/merge.pcm";
-const outputStream = fs.createWriteStream(fileName);
 
 function mergePCM(chunks,filePath) {
 
