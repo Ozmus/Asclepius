@@ -1,18 +1,3 @@
-''' Example of Spotify authorization code flow (refreshable user auth).
-Displays profile information of authenticated user and access token
-information that can be refreshed by clicking a button.
-Basic flow:
-    -> '/'
-    -> Spotify login page
-    -> '/callback'
-    -> get tokens
-    -> use tokens to access API
-Required environment variables:
-    FLASK_APP, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, SECRET_KEY
-More info:
-    https://developer.spotify.com/documentation/general/guides/authorization-guide/#authorization-code-flow
-'''
-
 from flask import (
     abort,
     Flask,
@@ -168,6 +153,7 @@ def refresh():
 
     return json.dumps(session['tokens'])
 
+
 @app.route('/me')
 def me():
     global user_data
@@ -193,12 +179,12 @@ def me():
 
     return render_template('me.html', data=user_data, tokens=session.get('tokens'))
 
+
 @app.route('/user-topArtists', methods=['GET'])
 def getUserTopArtist():
     SCOPE = 'user-top-read'
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
-                                  scope=SCOPE))
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
     artists = spotifyInfo.current_user_top_artists(limit=10, offset=0, time_range='short_term')['items']
     results = []
 
@@ -209,19 +195,15 @@ def getUserTopArtist():
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'genres', 'href', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='User Top Artists', rows='10', cols='5')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('User Top Artists').update([df.columns.values.tolist()] + df.values.tolist())
     return 'DONE.'
 
 
 @app.route('/topTracks', methods=['GET'])
 def getUserTopTracks():
     SCOPE = 'user-top-read'
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
-                                  scope=SCOPE))
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
     artists = spotifyInfo.current_user_top_tracks(limit=10, offset=0, time_range='short_term')
     results = []
 
@@ -232,19 +214,15 @@ def getUserTopTracks():
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'href', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='User Top Tracks', rows='10', cols='5')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('User Top Tracks').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
 
 
 @app.route('/user/recentlyPlayedTracks', methods=['GET'])
 def getRecentlyPlayedTracks():
     SCOPE = 'user-read-recently-played'
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
-                                  scope=SCOPE))
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
     artists = spotifyInfo.current_user_recently_played(limit=10, after=None, before=None)['items']
     results = []
 
@@ -255,17 +233,14 @@ def getRecentlyPlayedTracks():
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'href', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='User Recently Played Tracks', rows='10', cols='5')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('User Recently Played Tracks').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
 
 
 @app.route('/user/relatedArtists', methods=['GET'])
 def getRelatedArtists():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+    spotifyInfo = getSpotifyInfo()
+
     artists = spotifyInfo.artist_related_artists('2RQ8NtUmg5y6tfbvCwX8jI')['artists']
     results = []
 
@@ -274,18 +249,16 @@ def getRelatedArtists():
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'genres'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Artist Related Artists', rows=len(artists), cols='3')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('Artist Related Artists').update([df.columns.values.tolist()] + df.values.tolist())
     return 'DONE.'
 
 
 @app.route('/user/artists', methods=['GET'])
 def getSeveralArtists():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
-    artists = spotifyInfo.artists('2RQ8NtUmg5y6tfbvCwX8jI,6S2OmqARrzebs0tKUEyXyp,3ABivHBm6ULD624ig1lgOg')['artists']
+    spotifyInfo = getSpotifyInfo()
+
+    artistList = ['2RQ8NtUmg5y6tfbvCwX8jI', '6S2OmqARrzebs0tKUEyXyp', '3ABivHBm6ULD624ig1lgOg']
+    artists = spotifyInfo.artists(artistList)['artists']
     results = []
 
     for item in artists:
@@ -294,84 +267,71 @@ def getSeveralArtists():
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'genres', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Artists', rows=3, cols='4')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('Artists').update([df.columns.values.tolist()] + df.values.tolist())
     return 'DONE.'
 
 
 @app.route('/user/newReleases', methods=['GET'])
 def getNewReleases():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+    spotifyInfo = getSpotifyInfo()
 
-    tracks = spotifyInfo.new_releases(country='TR', limit=20, offset=0,)['albums']['items']
+    tracks = spotifyInfo.new_releases(country='TR', limit=20, offset=0, )['albums']['items']
     results = []
 
     for item in tracks:
         obj = {'id': item['id'], 'name': item['name'],
-               'artist': ' '.join(n['name'] for n in item['album']['artists']),
+               'artist': ' '.join(n['name'] for n in item['artists']),
                'external_urls': item['external_urls']['spotify']}
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='New Releases', rows='10', cols='4')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('New Releases').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
 
 
 @app.route('/tracks', methods=['GET'])
 def getTracks():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+    spotifyInfo = getSpotifyInfo()
 
-    tracks = spotifyInfo.tracks('7ouMYWpwJ422jRcDASZB7P,4VqPOruhp5EdPBeR92t6lQ,2takcwOaAZWiXQijPHIx7B', market=None)['tracks']
+    trackList = ['7ouMYWpwJ422jRcDASZB7P', '4VqPOruhp5EdPBeR92t6lQ', '2takcwOaAZWiXQijPHIx7B']
+    tracks = spotifyInfo.tracks(trackList, market=None)['tracks']
     results = []
 
     for item in tracks:
         obj = {'id': item['id'], 'name': item['name'],
-               'artist': ' '.join(n['name'] for n in item['artists']['name']),
-               'href': item['href'], 'external_urls': item['external_urls']['spotify']}
+               'artist': ' '.join(n['name'] for n in item['artists']),
+               'external_urls': item['external_urls']['spotify']}
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Tracks', rows='3', cols='4')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('Tracks').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
+
 
 @app.route('/albumTracks', methods=['GET'])
 def getAlbums():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+    spotifyInfo = getSpotifyInfo()
 
-    tracks = spotifyInfo.album_tracks('',limit=30, offset=0, market=None)['items']
+    tracks = spotifyInfo.album_tracks('0HcHPBu9aaF1MxOiZmUQTl', limit=30, offset=0, market=None)['items']
     results = []
 
     for item in tracks:
         obj = {'id': item['id'], 'name': item['name'],
-               'artist': ' '.join(n['name'] for n in item['album']['artists']), 'external_urls': item['external_urls']['spotify']}
+               'artist': ' '.join(n['name'] for n in item['artists']),
+               'external_urls': item['external_urls']['spotify']}
         results.append(obj)
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Album Tracks', rows='10', cols='4')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('Album Tracks').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
 
 
-@app.route('/audioFeature', methods = ['GET'])
-def getAudioFeature():
-    spotifyInfo = spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+@app.route('/audioFeature', methods=['GET'])
+def getAudioFeatures():
+    spotifyInfo = getSpotifyInfo()
 
-
-    track = spotifyInfo.audio_features('7ouMYWpwJ422jRcDASZB7P')['audio_features']
+    trackList = ['7ouMYWpwJ422jRcDASZB7P', '2nTgdpxwpXTk5x1c9yaO3W']
+    track = spotifyInfo.audio_features(trackList)
     results = []
 
     for item in track:
@@ -386,37 +346,218 @@ def getAudioFeature():
                           columns=['id', 'acousticnes', 'danceability', 'duration_ms', 'energy', 'instrumentalness',
                                    'key',
                                    'loudness', 'mode', 'tempo', 'valence'])
-    sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Tracks Audio Feature', rows='3', cols='11')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+    openWorksheet('Tracks Audio Feature').update([df.columns.values.tolist()] + df.values.tolist())
     return 'OK.'
 
-@app.route('/audioAnalysis', methods = ['GET'])
+
+@app.route('/user/followedArtists', methods=['GET'])
+def getUserFollowedArtists():
+    SCOPE = 'user-follow-read'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    followedArtists = spotifyInfo.current_user_followed_artists(limit=10)['artists']['items']
+    results = []
+
+    for item in followedArtists:
+        obj = {'id': item['id'], 'name': item['name'], 'genres': ', '.join(str(genre) for genre in item['genres']),
+               'external_urls': item['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'genres', 'external_urls'])
+    openWorksheet('User\'s Followed Artists').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/Playlist', methods=['GET'])
+def getUserPlaylists():
+    SCOPE = 'playlist-read-private playlist-read-collaborative'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    playlists = spotifyInfo.user_playlists('nonolala99', limit=5, offset=0)['items']
+    results = []
+
+    for item in playlists:
+        obj = {'id': item['id'], 'name': item['name']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name'])
+    openWorksheet('User Playlist').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/playlistItems', methods=['GET'])
+def getPlaylistItems():
+    SCOPE = 'playlist-read-private'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    playlistItems = spotifyInfo.playlist_items('1bWn2njrDAK1q8hrk48Jaf', limit=15, offset=0)['items']
+    results = []
+
+    for item in playlistItems:
+        obj = {'id': item['track']['id'], 'name': item['track']['name'],
+               'external_urls': item['track']['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    openWorksheet('Playlist Items').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/playlistForUser', methods=['POST'])
+def createPlaylistForUser():
+    SCOPE = 'playlist-modify-public playlist-modify-private'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    tracks = ['4OmFmE0fzcMG6g0Y8p4eSD', '37sINbJZcFdHFAsVNsPq1i', '6lCvK2AR2uOKkVFCVlAzzm', '4JXfNOePhdgMOI7KZ1L25U',
+              '4gXX2ayvtMf4Tc5DCSHFTH']
+    response = spotifyInfo.user_playlist_create('nonolala99', 'just for you... from ASCLEPIUS')
+    spotifyInfo.playlist_add_items(response['id'], tracks)
+    return 'OK.'
+
+
+@app.route('/categoryPlaylists', methods=['GET'])
+def getCategoryPlaylists():
+    spotifyInfo = getSpotifyInfo()
+
+    playlists = spotifyInfo.category_playlists('punk', 'US', limit=10, offset=5)['playlists']
+    results = []
+    for item in playlists['items']:
+        obj = {'id': item['id'], 'name': item['name'], 'external_urls': item['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    openWorksheet('Category Playlists').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/genreSeeds', methods=['GET'])
+def getAvailableGenreSeeds():
+    spotifyInfo = getSpotifyInfo()
+
+    genres = spotifyInfo.recommendation_genre_seeds()['genres']
+    df = pandas.DataFrame(genres, columns=['genres'])
+    openWorksheet('Available Genres').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/recommendations', methods=['GET'])
+def getRecommendationsForUser():
+    spotifyInfo = getSpotifyInfo()
+
+    artists = ['01crEa9G3pNpXZ5m7wuHOk']
+    genres = ['pop', 'rock', 'punk']
+    tracks = ['4RVwu0g32PAqgUiJoXsdF8']
+
+    rec = spotifyInfo.recommendations(seed_artists=artists, seed_genres=genres, seed_tracks=tracks, limit=15)['tracks']
+    results = []
+
+    for item in rec:
+        obj = {'id': item['id'], 'name': item['name'],
+               'artist': ' '.join(n['name'] for n in item['artists']),
+               'external_urls': item['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
+    openWorksheet('Recommended Tracks').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/savedEpisodes', methods=['GET'])
+def getUserSavedEpisodes():
+    SCOPE = 'user-library-read'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    episodes = spotifyInfo.current_user_saved_episodes(limit=5, offset=0, market='US')['items']
+    results = []
+
+    for item in episodes:
+        obj = {'id': item['episode']['id'], 'name': item['episode']['name'],
+               'external_urls': item['episode']['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    openWorksheet('User Saved Episodes').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/saveEpisode', methods=['POST'])
+def savedEpisodesForUser():
+    SCOPE = 'user-library-modify'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    episodeList = ['77o6BIVlYM3msb4MMIL1jH', '0Q86acNRm6V9GYx55SXKwf']
+    spotifyInfo.current_user_saved_episodes_add(episodeList)
+    return 'OK.'
+
+
+@app.route('/user/savedShows', methods=['GET'])
+def getUserSavedShows():
+    SCOPE = 'user-library-read'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    shows = spotifyInfo.current_user_saved_shows(limit=5, offset=0, market='US')['items']
+    results = []
+
+    for item in shows:
+        obj = {'id': item['show']['id'], 'name': item['show']['name'],
+               'external_urls': item['show']['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    openWorksheet('User Saved Shows').update([df.columns.values.tolist()] + df.values.tolist())
+    return 'OK.'
+
+
+@app.route('/user/saveShows', methods=['POST'])
+def saveShowsForUser():
+    SCOPE = 'user-library-modify'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    showList = ['5CfCWKI5pZ28U0uOzXkDHe', '5as3aKmN2k11yfDDDSrvaZ']
+    spotifyInfo.current_user_saved_shows_add(showList)
+    return 'OK.'
+
+
+@app.route('/audioAnalysis', methods=['GET'])
 def getAudioAnalysis():
-    spotifyInfo = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+    spotifyInfo = getSpotifyInfo()
 
     track = spotifyInfo.audio_analysis('7ouMYWpwJ422jRcDASZB7P')
 
-    obj = {'loudness': track['track']['loudness'], 'tempo': track['track']['tempo'] ,'tempo_confidence': track['track']['tempo_confidence'],
-           'time_signature': track['track']['time_signature'], 'time_signature_confidence': track['track']['time_signature_confidence'],
-           'key': track['track']['key'], 'key_confidence': track['track']['key_confidence'],'mode': track['track']['mode'],
-           'mode_confidence': track['track']['mode_confidence'], 'loudness': track['track']['loudness'], 'tempo': track['sections']['tempo'],
-           'tempo_confidence': track['sections']['tempo_confidence'], 'key': track['sections']['key'], 'key_confidence': track['sections']['key_confidence'],
-           'mode': track['sections']['mode'], 'mode_confidence': track['sections']['mode_confidence'], 'time_signature': track['sections']['time_signature'],
-           'time_signature_confidence': track['sections']['time_signature_confidence'], 'start': track['segments']['start'], 'duration': track['segments']['duration'],
-           'confidence': track['segments']['confidence'], 'loudness_start': track['segments']['loudness_start'], 'loudness_max': track['segments']['loudness_max'],
-           'loudness_max_time': track['segments']['loudness_max_time'], 'loudness_end': track['segments']['loudness_end']}
+    obj = {'loudness': track['track']['loudness'], 'tempo': track['track']['tempo'],
+           'tempo_confidence': track['track']['tempo_confidence'],
+           'time_signature': track['track']['time_signature'],
+           'time_signature_confidence': track['track']['time_signature_confidence'],
+           'key': track['track']['key'], 'key_confidence': track['track']['key_confidence'],
+           'mode': track['track']['mode'],
+           'mode_confidence': track['track']['mode_confidence'], 'loudness': track['track']['loudness'],
+           'tempo': track['sections']['tempo'],
+           'tempo_confidence': track['sections']['tempo_confidence'], 'key': track['sections']['key'],
+           'key_confidence': track['sections']['key_confidence'],
+           'mode': track['sections']['mode'], 'mode_confidence': track['sections']['mode_confidence'],
+           'time_signature': track['sections']['time_signature'],
+           'time_signature_confidence': track['sections']['time_signature_confidence'],
+           'start': track['segments']['start'], 'duration': track['segments']['duration'],
+           'confidence': track['segments']['confidence'], 'loudness_start': track['segments']['loudness_start'],
+           'loudness_max': track['segments']['loudness_max'],
+           'loudness_max_time': track['segments']['loudness_max_time'],
+           'loudness_end': track['segments']['loudness_end']}
 
-    df = pandas.DataFrame(track, columns=['loudness', 'tempo' ,'tempo_confidence', 'time_signature', 'time_signature_confidence','key', 'key_confidence','mode',
-           'mode_confidence', 'loudness', 'tempo', 'tempo_confidence', 'key', 'key_confidence', 'mode', 'mode_confidence', 'time_signature',
-           'time_signature_confidence', 'start', 'duration', 'confidence', 'loudness_start', 'loudness_max', 'loudness_max_time', 'loudness_end'])
+    df = pandas.DataFrame(track, columns=['loudness', 'tempo', 'tempo_confidence', 'time_signature',
+                                          'time_signature_confidence', 'key', 'key_confidence', 'mode',
+                                          'mode_confidence', 'loudness', 'tempo', 'tempo_confidence', 'key',
+                                          'key_confidence', 'mode', 'mode_confidence', 'time_signature',
+                                          'time_signature_confidence', 'start', 'duration', 'confidence',
+                                          'loudness_start', 'loudness_max', 'loudness_max_time', 'loudness_end'])
+    return ""
 
 
+def openWorksheet(sheetName):
     sheets = gc.open('Asclepius')
-    worksheet = sheets.add_worksheet(title='Tracks Audio Analysis', rows='3', cols='25')
-    print([df.columns.values.tolist()] + df.values.tolist())
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return sheets.worksheet(title=sheetName)
 
 
+def getSpotifyInfo(SCOPE):
+    return spotipy.Spotify(
+        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
+                                  scope=SCOPE))
