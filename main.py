@@ -1,4 +1,9 @@
 import os
+import random
+from os import listdir
+from os.path import isfile, join
+
+import discord
 import speech_recognition as sr
 import soundfile
 
@@ -40,6 +45,17 @@ async def stopRecord(ctx):
     soundfile.write(path + '/newOut.wav', data, samplerate, subtype="PCM_16")
     os.remove(outFile)
     speechRecognition()
+
+
+@client.command()
+async def breathe(ctx):
+    gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
+    rand = random.randrange(0, len(gifs))
+    gifPath = "breatheExerciseGif/"+gifs[rand]
+    with open(gifPath, 'rb') as gif:
+        exerciseGif = discord.File(gif)
+        await ctx.send(file=exerciseGif)
+
 
 
 client.run(os.getenv('TOKEN'))
