@@ -16,6 +16,28 @@ Movie_ID = '464052'
 async def on_ready():
     print("I am ready yo!")
 
+#loads genre list using get request from themoviedb
+def load_genre_dictionary():
+    genreDict = {}
+    text = json.dumps(requests.get("https://api.themoviedb.org/3/genre/movie/list?api_key=", API_key, "&language=en-US").json())
+    dataset = json.loads(text)
+    for i in range(len(dataset['genres'])):
+        genreDict[dataset['genres'][i]['id']] = dataset['genres'][i]['name']
+
+    with open('genreDictionary', 'w') as genre_dict_file:
+        genre_dict_file.write(json.dumps(genreDict))
+
+def read_genre_dictionary():
+    # reading the data from the file
+    with open('genreDictionary') as genre_dict_file:
+        genres = genre_dict_file.read()
+    genreDict = json.loads(genres)
+    return genreDict
+
+def get_genre(genre_ID):
+    genreDict = read_genre_dictionary()
+    return genreDict[genre_ID]
+
 #write a function to compose the query using the parameters provided
 def get_data(API_key, Movie_ID):
     query = 'https://api.themoviedb.org/3/movie/'+Movie_ID+'?api_key='+API_key+'&language=en-US'
@@ -30,7 +52,7 @@ def get_data(API_key, Movie_ID):
 
 def write_file(filename, text):
     dataset = json.loads(text)
-    csvFile = open(filename,'a')
+    csvFile = open(filename, 'a')
     csvwriter = csv.writer(csvFile)
     #unpack the result to access the "collection name" element
     try:
@@ -38,10 +60,15 @@ def write_file(filename, text):
     except:
         #for movies that don't belong to a collection, assign null
         collection_name = None
-    result = [dataset['original_title'],collection_name]
-    # write data
-    csvwriter.writerow(result)
-    print (result)
+
+    for i in range(20):
+        result = [dataset['results'][i]['original_title'], collection_name, dataset['results'][i]['genre_ids']]
+        # write data
+        try:
+            csvwriter.writerow(result)
+            print(result)
+        except:
+            continue
     csvFile.close()
 
 @client.event
@@ -52,7 +79,8 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello I am Asclepius.')
     if message.content.startswith('$movie'):
-        write_file('filmList', get_data(API_key, Movie_ID))
+        print(get_genre('10751'))
+        #write_file('filmList', json.dumps(requests.get("https://api.themoviedb.org/3/trending/movie/day?api_key=", API_key).json()))
         #await message.channel.send(get_data(API_key, Movie_ID))
 
 client.run(os.getenv('TOKEN'))
