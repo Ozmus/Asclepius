@@ -1,3 +1,4 @@
 SoundFile
 python-dotenv
 discord
+SpeechRecognition
