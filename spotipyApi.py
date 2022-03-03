@@ -196,7 +196,7 @@ def getUserTopArtist():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'genres', 'href', 'external_urls'])
     openWorksheet('User Top Artists').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'DONE.'
+    return df
 
 
 @app.route('/topTracks', methods=['GET'])
@@ -215,7 +215,7 @@ def getUserTopTracks():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'href', 'external_urls'])
     openWorksheet('User Top Tracks').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/user/recentlyPlayedTracks', methods=['GET'])
@@ -273,7 +273,7 @@ def getSeveralArtists():
 
 @app.route('/user/newReleases', methods=['GET'])
 def getNewReleases():
-    spotifyInfo = getSpotifyInfo()
+    spotifyInfo = getSpotifyInfo(None)
 
     tracks = spotifyInfo.new_releases(country='TR', limit=20, offset=0, )['albums']['items']
     results = []
@@ -286,7 +286,7 @@ def getNewReleases():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
     openWorksheet('New Releases').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/tracks', methods=['GET'])
@@ -310,7 +310,7 @@ def getTracks():
 
 @app.route('/albumTracks', methods=['GET'])
 def getAlbums():
-    spotifyInfo = getSpotifyInfo()
+    spotifyInfo = getSpotifyInfo(None)
 
     tracks = spotifyInfo.album_tracks('0HcHPBu9aaF1MxOiZmUQTl', limit=30, offset=0, market=None)['items']
     results = []
@@ -323,7 +323,7 @@ def getAlbums():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
     openWorksheet('Album Tracks').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/audioFeature', methods=['GET'])
@@ -377,12 +377,12 @@ def getUserPlaylists():
     results = []
 
     for item in playlists:
-        obj = {'id': item['id'], 'name': item['name']}
+        obj = {'id': item['id'], 'name': item['name'], 'external_urls': item['external_urls']['spotify']}
         results.append(obj)
 
-    df = pandas.DataFrame(results, columns=['id', 'name'])
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
     openWorksheet('User Playlist').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/user/playlistItems', methods=['GET'])
@@ -400,7 +400,7 @@ def getPlaylistItems():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
     openWorksheet('Playlist Items').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/user/playlistForUser', methods=['POST'])
@@ -408,11 +408,11 @@ def createPlaylistForUser():
     SCOPE = 'playlist-modify-public playlist-modify-private'
     spotifyInfo = getSpotifyInfo(SCOPE)
 
-    tracks = ['4OmFmE0fzcMG6g0Y8p4eSD', '37sINbJZcFdHFAsVNsPq1i', '6lCvK2AR2uOKkVFCVlAzzm', '4JXfNOePhdgMOI7KZ1L25U',
-              '4gXX2ayvtMf4Tc5DCSHFTH']
+    tracks = ['6mPJvjjx7pcfZuI57Dh95o', '2takcwOaAZWiXQijPHIx7B', '6lCvK2AR2uOKkVFCVlAzzm', '0y6kdSRCVQhSsHSpWvTUm7',
+              '2NmsngXHeC1GQ9wWrzhOMf']
     response = spotifyInfo.user_playlist_create('nonolala99', 'just for you... from ASCLEPIUS')
     spotifyInfo.playlist_add_items(response['id'], tracks)
-    return 'OK.'
+    return response['external_urls']['spotify']
 
 
 @app.route('/categoryPlaylists', methods=['GET'])
@@ -442,7 +442,7 @@ def getAvailableGenreSeeds():
 
 @app.route('/user/recommendations', methods=['GET'])
 def getRecommendationsForUser():
-    spotifyInfo = getSpotifyInfo()
+    spotifyInfo = getSpotifyInfo(None)
 
     artists = ['01crEa9G3pNpXZ5m7wuHOk']
     genres = ['pop', 'rock', 'punk']
@@ -459,7 +459,7 @@ def getRecommendationsForUser():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
     openWorksheet('Recommended Tracks').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/user/savedEpisodes', methods=['GET'])
@@ -558,6 +558,10 @@ def openWorksheet(sheetName):
 
 
 def getSpotifyInfo(SCOPE):
+    if SCOPE is None:
+        return spotipy.Spotify(
+            auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+
     return spotipy.Spotify(
         auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
                                   scope=SCOPE))
