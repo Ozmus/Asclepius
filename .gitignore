@@ -4,3 +4,4 @@ venv
 .env
 .cache
 asclepius-spotify-data.json
+/voiceOfAsclepius/node_modules/
