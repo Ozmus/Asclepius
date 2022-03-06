@@ -6,14 +6,15 @@ from os.path import isfile, join
 import discord
 import speech_recognition as sr
 import soundfile
+import requests
 
 from discord.ext import commands
 from dotenv import load_dotenv
 
 client = commands.Bot(command_prefix=">")
 load_dotenv()
-
-
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+TOKEN = os.getenv('TOKEN')
 @client.event
 async def on_ready():
     print("I am ready")
@@ -32,6 +33,15 @@ def speechRecognition():
         text = r.recognize_google(audio_data)
         print(text)
 
+def getVideoFromYoutube(searchTerm):
+    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
+    # print(response)
+    return response['items']
+
+def getVideoDetails(videoId):
+    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=statistics&id={videoId}&key={YOUTUBE_API_KEY}').json()
+    # print(response)
+    return response['items'][0]
 
 @client.command()
 async def stopRecord(ctx):
@@ -56,6 +66,36 @@ async def breathe(ctx):
         exerciseGif = discord.File(gif)
         await ctx.send(file=exerciseGif)
 
+@client.command()
+async def youtube(ctx, *args):
+    if(len(args) == 0):
+        await ctx.send("Please give an argument")
+        return
+
+    videos = getVideoFromYoutube(args[0])
+    topVideo = videos[0]
+    videoTitle = topVideo['snippet']['title']
+    videoAuthor = topVideo['snippet']['channelTitle']
+    videoId = topVideo['id']['videoId']
+    videoDescription = topVideo['snippet']['description']
+    videoThumbnail = topVideo['snippet']['thumbnails']['high']['url']
+    videoDetails = getVideoDetails(videoId) # 0 content, 1 statistics
+    videoViewCount = videoDetails['statistics']['viewCount']
+    showComment = True
+    try:
+        videoCommentCount = videoDetails['statistics']['commentCount']
+    except Exception:
+        showComment = False
+
+    videoCaption = videoDetails['contentDetails']['caption']
+
+    embed=discord.Embed(title=videoTitle, url=f"https://www.youtube.com/watch?v={videoId}", description=videoDescription, color=discord.Color.blue())
+    embed.set_thumbnail(url=videoThumbnail)
+    embed.set_author(name=videoAuthor)
+    embed.add_field(name="Views", value=videoViewCount, inline=True)
+    if showComment: embed.add_field(name="Comments", value=videoCommentCount, inline=True)
+    embed.add_field(name="Caption", value= u'\u2713' if videoCaption == "true" else u'\u2717', inline=True)
+    await ctx.send(embed=embed)
 
 
-client.run(os.getenv('TOKEN'))
+client.run(TOKEN)
