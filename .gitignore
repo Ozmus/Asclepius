@@ -5,3 +5,4 @@ venv
 .cache
 asclepius-spotify-data.json
 /voiceOfAsclepius/node_modules/
+apiCalls.py
