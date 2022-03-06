@@ -308,6 +308,20 @@ def getTracks():
     return 'OK.'
 
 
+@app.route('/tracks', methods=['GET'])
+def getTrack(id):
+    spotifyInfo = getSpotifyInfo(None)
+
+    track = spotifyInfo.track(id)
+    results = []
+
+    obj = {'id': track['id'], 'name': track['name'], 'artist': ' '.join(n['name'] for n in track['artists']),
+           'external_urls': track['external_urls']['spotify']}
+    results.append(obj)
+    df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'external_urls'])
+    return df
+
+
 @app.route('/albumTracks', methods=['GET'])
 def getAlbums():
     spotifyInfo = getSpotifyInfo(None)
@@ -480,14 +494,32 @@ def getUserSavedEpisodes():
     return 'OK.'
 
 
+@app.route('/user/savedEpisodes', methods=['GET'])
+def getEpisodes(id):
+    SCOPE = 'user-read-playback-position'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    episodes = spotifyInfo.show_episodes(id, limit=5, offset=0)['items']
+    results = []
+
+    for item in episodes:
+        obj = {'id': item['id'], 'name': item['name'],
+               'external_urls': item['external_urls']['spotify']}
+        results.append(obj)
+
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    openWorksheet('Show Episodes').update([df.columns.values.tolist()] + df.values.tolist())
+    return df
+
+
 @app.route('/user/saveEpisode', methods=['POST'])
-def savedEpisodesForUser():
+def saveEpisodesForUser():
     SCOPE = 'user-library-modify'
     spotifyInfo = getSpotifyInfo(SCOPE)
 
     episodeList = ['77o6BIVlYM3msb4MMIL1jH', '0Q86acNRm6V9GYx55SXKwf']
     spotifyInfo.current_user_saved_episodes_add(episodeList)
-    return 'OK.'
+    return getEpisode(episodeList[0])
 
 
 @app.route('/user/savedShows', methods=['GET'])
@@ -515,7 +547,22 @@ def saveShowsForUser():
 
     showList = ['5CfCWKI5pZ28U0uOzXkDHe', '5as3aKmN2k11yfDDDSrvaZ']
     spotifyInfo.current_user_saved_shows_add(showList)
-    return 'OK.'
+    return getEpisodes('5CfCWKI5pZ28U0uOzXkDHe')
+
+
+@app.route('/user/savedEpisodes', methods=['GET'])
+def getEpisode(id):
+    SCOPE = 'user-read-playback-position'
+    spotifyInfo = getSpotifyInfo(SCOPE)
+
+    episode = spotifyInfo.episode(id)
+    results = []
+
+    obj = {'id': episode['id'], 'name': episode['name'],
+           'external_urls': episode['external_urls']['spotify']}
+    results.append(obj)
+    df = pandas.DataFrame(results, columns=['id', 'name', 'external_urls'])
+    return df
 
 
 @app.route('/audioAnalysis', methods=['GET'])

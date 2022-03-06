@@ -8,6 +8,7 @@ import soundfile
 import speech_recognition as sr
 from discord.ext import commands
 from dotenv import load_dotenv
+
 import spotipyApi as spotiApi
 
 commandList = {
@@ -15,20 +16,21 @@ commandList = {
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
     3: {"command": "getPlaylist", "description": "Asclepius can get your playlist."},
     4: {"command": "recommendMe", "description": "Asclepius' recommendations for you."},
-    5: {"command": "saveShows", "description": "Asclepius can save shows for you."},
+    5: {"command": "saveShow", "description": "Asclepius can save shows for you."},
     6: {"command": "saveEp", "description": "Asclepius can save episodes for you."},
     7: {"command": "getSong", "description": "Asclepius can play the song for you."},
     8: {"command": "getAlbum", "description": "Asclepius can play the album for you."},
     9: {"command": "showPlaylist", "description": "Asclepius can show the tracks in the playlist for you."},
     10: {"command": "topTracks", "description": "Asclepius knows your favorite tracks!"},
-    11: {"command": "topArtists", "description": "Asclepius knows your favorite artists!"}
+    11: {"command": "topArtists", "description": "Asclepius knows your favorite artists!"},
+    12: {"command": "priTalk", "description": "Asclepius can talk with you in dm!"}
 }
 
-client = commands.Bot(command_prefix='>')
 load_dotenv()
 GUILD = os.getenv('DISCORD_GUILD')
 GENEL = os.getenv('DISCORD_GENEL')
-intents = discord.Intents.all()
+ints = discord.Intents.all()
+client = commands.Bot(command_prefix='>', intents=ints)
 
 
 # client = discord.Client(intents=intents)
@@ -37,15 +39,7 @@ intents = discord.Intents.all()
 @client.event
 async def on_ready():
     await client.wait_until_ready()
-    # await client.get_channel(GENEL).send(f'Sahibiniz geldi 👑')
-
-    # for guild in client.guilds:
-    #   if guild.name == "TOBB ETU SEVDALILARI":
-    #      for member in guild.members:
-    #         if member.status == discord.Status.online and member != client.user:
-    #            print(member, member.status)
-    #           await member.create_dm()
-    #          await member.dm_channel.send(f'Merhaba bebegim {member.name} imparatorluğuma hoşgeldin.')
+    await client.get_channel(GENEL).send(f'Ben geldim. 👑')
     print("I am ready")
 
 
@@ -122,8 +116,31 @@ async def recommendation(ctx):
     await ctx.send(embed=embed)
 
 
-# @client.event
-# async def on_private_channel_update(before, after):
+@client.event
+async def on_member_join(member):
+    print("---------------")
+    print(member)
+    await member.create_dm()
+    await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
+
+
+@client.event
+async def on_message(msg):
+    if msg.author == client.user:
+        return
+    print(str(msg.content))
+    if isinstance(msg.channel, discord.channel.DMChannel):
+        await msg.channel.send(str(msg.content + " - from Asclepius"))
+
+    await client.process_commands(msg)
+
+
+@client.command(name="priTalk")
+async def on_message(msg):
+    member = msg.guild.get_member(msg.author.id)
+    await member.create_dm()
+    await member.dm_channel.send(f'Hadi konuşalım {member.name}. ')
+
 
 @client.command(name="createPlaylist")
 async def createPlaylist(ctx):
@@ -168,12 +185,12 @@ async def getPlaylist(ctx):
 
 
 @client.command(name="topArtists")
-async def getTopTracks(ctx):
+async def getTopArtists(ctx):
     embed = discord.Embed(title="Your Favorite Artists",
                           color=discord.Color.dark_orange())
 
     for rec in spotiApi.getUserTopArtist().values.tolist():
-        embed.add_field(name=rec[1], value="Genre: " + rec[2] + " - " + rec[4], inline=False)
+        embed.add_field(name=rec[1], value="Genre: " + rec[2] + " " + rec[4], inline=False)
 
     await ctx.send(embed=embed)
 
@@ -186,6 +203,39 @@ async def getTopTracks(ctx):
     for rec in spotiApi.getUserTopTracks().values.tolist():
         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
 
+    await ctx.send(embed=embed)
+
+
+@client.command(name="saveShow")
+async def saveShow(ctx):
+    embed = discord.Embed(title="Asclepius saved the show for you.", description="Here's the available episodes.",
+                          color=discord.Color.dark_teal())
+
+    for rec in spotiApi.saveShowsForUser().values.tolist():
+        embed.add_field(name=rec[1], value=rec[2], inline=False)
+
+    await ctx.send(embed=embed)
+
+
+@client.command(name="saveEp")
+async def saveEpisode(ctx):
+    ep = spotiApi.saveEpisodesForUser()
+    print(ep)
+    embed = discord.Embed(title="Asclepius saved the episode for you.",
+                          description=ep.iat[0, 1] + " (>‿◠)✌" + ep.iat[0, 2],
+                          color=discord.Color.blurple())
+
+    await ctx.send(embed=embed)
+
+
+@client.command(name="getSong")
+async def getTrack(ctx):
+    ep = spotiApi.getTrack('7ouMYWpwJ422jRcDASZB7P')
+    print(ep)
+    embed = discord.Embed(title="Here's the song!",
+                          color=discord.Color.blurple())
+
+    embed.add_field(name=ep.iat[0, 1], value=ep.iat[0, 2] + ": " + ep.iat[0, 3], inline=False)
     await ctx.send(embed=embed)
 
 
