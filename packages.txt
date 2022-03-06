@@ -1,2 +1,7 @@
 discord
 dot_env
+tweepy
+configparser
+pandas
+requests
+requests-oauthlib
