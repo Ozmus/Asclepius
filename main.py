@@ -3,14 +3,14 @@ import os
 from dotenv import load_dotenv
 import requests
 import json
-import csv
+import random
 
 load_dotenv()
 client = discord.Client()
 
 #document all the parameters as variables
-API_key = os.getenv('TheMovieDatabaseAPIKey')
-Movie_ID = '464052'
+Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
+Movie_ID = '634649'
 
 @client.event
 async def on_ready():
@@ -19,7 +19,7 @@ async def on_ready():
 #loads genre list using get request from themoviedb
 def load_genre_dictionary():
     genreDict = {}
-    text = json.dumps(requests.get("https://api.themoviedb.org/3/genre/movie/list?api_key=", API_key, "&language=en-US").json())
+    text = json.dumps(requests.get("https://api.themoviedb.org/3/genre/movie/list?api_key=", Movie_db_API_key, "&language=en-US").json())
     dataset = json.loads(text)
     for i in range(len(dataset['genres'])):
         genreDict[dataset['genres'][i]['id']] = dataset['genres'][i]['name']
@@ -39,37 +39,48 @@ def get_genre(genre_ID):
     return genreDict[genre_ID]
 
 #write a function to compose the query using the parameters provided
-def get_data(API_key, Movie_ID):
-    query = 'https://api.themoviedb.org/3/movie/'+Movie_ID+'?api_key='+API_key+'&language=en-US'
+def get_data(Movie_db_API_key, Movie_ID):
+    query = 'https://api.themoviedb.org/3/movie/' + Movie_ID + '?api_key=' + Movie_db_API_key + '&language=en-US'
     response = requests.get(query)
     if response.status_code==200:
     #status code ==200 indicates the API query was successful
         array = response.json()
         text = json.dumps(array)
-        return (text)
+        return array['original_title']
     else:
         return ("error")
 
-def write_file(filename, text):
+def load_popular_film_list():
+    filename = 'filmList'
+    query = "https://api.themoviedb.org/3/movie/popular?api_key=" + Movie_db_API_key + "&language=en-US&page=1"
+    text = json.dumps(requests.get(query).json())
     dataset = json.loads(text)
-    csvFile = open(filename, 'a')
-    csvwriter = csv.writer(csvFile)
-    #unpack the result to access the "collection name" element
-    try:
-        collection_name = dataset['belongs_to_collection']['name']
-    except:
-        #for movies that don't belong to a collection, assign null
-        collection_name = None
+    datasetResults = dataset['results']
+    filmList = []
+    for i in range(len(datasetResults)):
+        filmList.append({"id": datasetResults[i]['id']
+                    , "original_title": datasetResults[i]['original_title']
+                    , "genre_ids": datasetResults[i]['genre_ids']
+                    , "vote_average": datasetResults[i]['vote_average']
+                    , "overview": datasetResults[i]['overview']
+                    , "poster_path": datasetResults[i]['poster_path']
+                    , "popularity": datasetResults[i]['popularity']
+                })
 
-    for i in range(20):
-        result = [dataset['results'][i]['original_title'], collection_name, dataset['results'][i]['genre_ids']]
-        # write data
-        try:
-            csvwriter.writerow(result)
-            print(result)
-        except:
-            continue
-    csvFile.close()
+    with open(filename, 'w') as film_list_file:
+        film_list_file.write(json.dumps(filmList))
+
+def read_popular_film_list():
+    filename = 'filmList'
+    # reading the data from the file
+    with open(filename) as film_list_file:
+        films = film_list_file.read()
+    filmList = json.loads(films)
+    return filmList
+
+def get_film():
+    filmList = read_popular_film_list()
+    return filmList[random.randint(0,19)]
 
 @client.event
 async def on_message(message):
@@ -79,9 +90,7 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello I am Asclepius.')
     if message.content.startswith('$movie'):
-        print(get_genre('10751'))
-        #write_file('filmList', json.dumps(requests.get("https://api.themoviedb.org/3/trending/movie/day?api_key=", API_key).json()))
-        #await message.channel.send(get_data(API_key, Movie_ID))
+        film = get_film()
+        await message.channel.send(film['original_title'])
 
 client.run(os.getenv('TOKEN'))
-
