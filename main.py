@@ -1,5 +1,13 @@
-import discord
 import os
+import random
+from os import listdir
+from os.path import isfile, join
+
+import discord
+import speech_recognition as sr
+import soundfile
+
+from discord.ext import commands
 from dotenv import load_dotenv
 import requests
 import json
@@ -11,10 +19,13 @@ client = discord.Client()
 #document all the parameters as variables
 Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
 Movie_ID = '634649'
+client = commands.Bot(command_prefix=">")
+
 
 @client.event
 async def on_ready():
-    print("I am ready yo!")
+    print("I am ready")
+
 
 #loads genre list using get request from themoviedb
 def load_genre_dictionary():
@@ -81,16 +92,49 @@ def read_popular_film_list():
 def get_film():
     filmList = read_popular_film_list()
     return filmList[random.randint(0,19)]
+  
+@client.command()
+async def movie(ctx):
+  film = get_film()
+  await ctx.send(film['original_title'])
+  
+@client.command()
+async def hello(ctx):
+    await ctx.send("Hello, I'm Asclepius.")
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello I am Asclepius.')
-    if message.content.startswith('$movie'):
-        film = get_film()
-        await message.channel.send(film['original_title'])
+def speechRecognition():
+    filename = "voiceOfAsclepius/records/newOut.wav"
+    r = sr.Recognizer()
+    with sr.AudioFile(filename) as source:
+        audio_data = r.record(source)
+        text = r.recognize_google(audio_data)
+        print(text)
+
+
+@client.command()
+async def stopRecord(ctx):
+    path = "voiceOfAsclepius/records"
+    absolutePath = os.path.abspath(path)
+    outFile = absolutePath + "/out.wav"
+    command = f"ffmpeg -f s16le -ar 48000 -ac 2 -i " + path + "/merge.pcm" + " " + outFile
+    os.system(command)
+    os.remove(path + "/merge.pcm")
+    data, samplerate = soundfile.read(outFile)
+    soundfile.write(path + '/newOut.wav', data, samplerate, subtype="PCM_16")
+    os.remove(outFile)
+    speechRecognition()
+
+
+@client.command()
+async def breathe(ctx):
+    gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
+    rand = random.randrange(0, len(gifs))
+    gifPath = "breatheExerciseGif/"+gifs[rand]
+    with open(gifPath, 'rb') as gif:
+        exerciseGif = discord.File(gif)
+        await ctx.send(file=exerciseGif)
+
+
 
 client.run(os.getenv('TOKEN'))
