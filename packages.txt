@@ -1,2 +1,5 @@
 discord
 dot_env
+requests
+json
+csv
