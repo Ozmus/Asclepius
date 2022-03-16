@@ -6,20 +6,25 @@ from os.path import isfile, join
 import discord
 import speech_recognition as sr
 import soundfile
+import requests
 
 from discord.ext import commands
 from dotenv import load_dotenv
 import requests
 import json
 import random
+from modules.youtube import *
 
 load_dotenv()
+TOKEN = os.getenv('TOKEN')
+
 client = discord.Client()
 
 #document all the parameters as variables
 Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
 Movie_ID = '634649'
 client = commands.Bot(command_prefix=">")
+
 
 
 @client.event
@@ -112,6 +117,7 @@ def speechRecognition():
         print(text)
 
 
+
 @client.command()
 async def stopRecord(ctx):
     path = "voiceOfAsclepius/records"
@@ -135,6 +141,16 @@ async def breathe(ctx):
         exerciseGif = discord.File(gif)
         await ctx.send(file=exerciseGif)
 
+@client.command()
+async def youtube(ctx, *args):
+    if(len(args) == 0):
+        await ctx.send("Please give an argument")
+        return
+
+    videos = getVideoFromYoutube(args[0])
+    topVideo = videos[0]
+    embed = createEmbed(topVideo)
+    await ctx.send(embed=embed)
 
 
-client.run(os.getenv('TOKEN'))
+client.run(TOKEN)
