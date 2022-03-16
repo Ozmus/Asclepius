@@ -13,9 +13,9 @@ from dotenv import load_dotenv
 import requests
 import json
 import random
+from modules.youtube import *
 
 load_dotenv()
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 TOKEN = os.getenv('TOKEN')
 
 client = discord.Client()
@@ -116,15 +116,7 @@ def speechRecognition():
         text = r.recognize_google(audio_data)
         print(text)
 
-def getVideoFromYoutube(searchTerm):
-    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
-    # print(response)
-    return response['items']
 
-def getVideoDetails(videoId):
-    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=statistics&id={videoId}&key={YOUTUBE_API_KEY}').json()
-    # print(response)
-    return response['items'][0]
 
 @client.command()
 async def stopRecord(ctx):
@@ -157,27 +149,7 @@ async def youtube(ctx, *args):
 
     videos = getVideoFromYoutube(args[0])
     topVideo = videos[0]
-    videoTitle = topVideo['snippet']['title']
-    videoAuthor = topVideo['snippet']['channelTitle']
-    videoId = topVideo['id']['videoId']
-    videoDescription = topVideo['snippet']['description']
-    videoThumbnail = topVideo['snippet']['thumbnails']['high']['url']
-    videoDetails = getVideoDetails(videoId) # 0 content, 1 statistics
-    videoViewCount = videoDetails['statistics']['viewCount']
-    showComment = True
-    try:
-        videoCommentCount = videoDetails['statistics']['commentCount']
-    except Exception:
-        showComment = False
-
-    videoCaption = videoDetails['contentDetails']['caption']
-
-    embed=discord.Embed(title=videoTitle, url=f"https://www.youtube.com/watch?v={videoId}", description=videoDescription, color=discord.Color.blue())
-    embed.set_thumbnail(url=videoThumbnail)
-    embed.set_author(name=videoAuthor)
-    embed.add_field(name="Views", value=videoViewCount, inline=True)
-    if showComment: embed.add_field(name="Comments", value=videoCommentCount, inline=True)
-    embed.add_field(name="Caption", value= u'\u2713' if videoCaption == "true" else u'\u2717', inline=True)
+    embed = createEmbed(topVideo)
     await ctx.send(embed=embed)
 
 
