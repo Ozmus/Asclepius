@@ -2,6 +2,7 @@
 import json
 import os
 
+import discord
 import requests
 from numpy import random
 
@@ -56,6 +57,7 @@ def load_popular_film_list():
                     , "overview": datasetResults[i]['overview']
                     , "poster_path": datasetResults[i]['poster_path']
                     , "popularity": datasetResults[i]['popularity']
+                    , "release_date": datasetResults[i]['release_date']
                 })
 
     with open(filename, 'w') as film_list_file:
@@ -70,5 +72,13 @@ def read_popular_film_list():
     return filmList
 
 def get_film():
+    load_popular_film_list()
     filmList = read_popular_film_list()
-    return filmList[random.randint(0,19)]
+    film = filmList[random.randint(0, 19)]
+    embed = discord.Embed(title=film['original_title'],
+                          description=film['overview'],
+                          color=discord.Color.blue())
+    embed.set_thumbnail(url='https://image.tmdb.org/t/p/original/'+ film['poster_path'])
+    embed.add_field(name="Release Date", value=film['release_date'], inline=True)
+    embed.add_field(name="Vote Average", value=film['vote_average'], inline=True)
+    return embed
