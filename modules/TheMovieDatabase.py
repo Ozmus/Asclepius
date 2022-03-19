@@ -6,7 +6,6 @@ import requests
 from numpy import random
 
 Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
-Movie_ID = '634649'
 
 #loads genre list using get request from themoviedb
 def load_genre_dictionary():
