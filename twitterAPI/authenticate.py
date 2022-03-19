@@ -3,12 +3,12 @@ import sys
 import requests
 from requests_oauthlib import OAuth1Session
 import tweepy
+import os
+from dotenv import load_dotenv
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-CONSUMER_KEY = config['twitter']['api_key']
-CONSUMER_SECRET = config['twitter']['api_key_secret']
+load_dotenv()
+CONSUMER_KEY = os.getenv('TWITTER_API_KEY')
+CONSUMER_SECRET = os.getenv('TWITTER_API_KEY_SECRET')
 
 def request_token():
     oauth = OAuth1Session(CONSUMER_KEY, client_secret=CONSUMER_SECRET, callback_uri='oob')
