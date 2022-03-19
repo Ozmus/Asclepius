@@ -30,7 +30,7 @@ async def on_ready():
 @client.command()
 async def movie(ctx):
   film = get_film()
-  await ctx.send(film['original_title'])
+  await ctx.send(embed = film)
   
 @client.command()
 async def hello(ctx):

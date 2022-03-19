@@ -32,7 +32,7 @@ def createEmbed(video):
 
     videoCaption = videoDetails['contentDetails']['caption']
 
-    embed=discord.Embed(title=videoTitle, url=f"https://www.youtube.com/watch?v={videoId}", description=videoDescription, color=discord.Color.blue())
+    embed=discord.Embed(title=videoTitle, url=f"https://www.youtube.com/watch?v={videoId}", description=videoDescription, color=discord.Color.red())
     embed.set_thumbnail(url=videoThumbnail)
     embed.set_author(name=videoAuthor)
     embed.add_field(name="Views", value=videoViewCount, inline=True)
