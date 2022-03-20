@@ -180,7 +180,7 @@ def me():
     return render_template('me.html', data=user_data, tokens=session.get('tokens'))
 
 
-@app.route('/user-topArtists', methods=['GET'])
+
 def getUserTopArtist():
     SCOPE = 'user-top-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -199,7 +199,7 @@ def getUserTopArtist():
     return df
 
 
-@app.route('/topTracks', methods=['GET'])
+
 def getUserTopTracks():
     SCOPE = 'user-top-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -218,7 +218,7 @@ def getUserTopTracks():
     return df
 
 
-@app.route('/user/recentlyPlayedTracks', methods=['GET'])
+
 def getRecentlyPlayedTracks():
     SCOPE = 'user-read-recently-played'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -237,7 +237,7 @@ def getRecentlyPlayedTracks():
     return df
 
 
-@app.route('/user/relatedArtists', methods=['GET'])
+
 def getRelatedArtists():
     spotifyInfo = getSpotifyInfo()
 
@@ -253,7 +253,6 @@ def getRelatedArtists():
     return 'DONE.'
 
 
-@app.route('/user/artists', methods=['GET'])
 def getSeveralArtists():
     spotifyInfo = getSpotifyInfo()
 
@@ -271,7 +270,6 @@ def getSeveralArtists():
     return 'DONE.'
 
 
-@app.route('/user/newReleases', methods=['GET'])
 def getNewReleases():
     spotifyInfo = getSpotifyInfo(None)
 
@@ -289,7 +287,7 @@ def getNewReleases():
     return df
 
 
-@app.route('/tracks', methods=['GET'])
+
 def getTracks():
     spotifyInfo = getSpotifyInfo()
 
@@ -308,7 +306,7 @@ def getTracks():
     return 'OK.'
 
 
-@app.route('/tracks', methods=['GET'])
+
 def getTrack(id):
     spotifyInfo = getSpotifyInfo(None)
 
@@ -327,7 +325,7 @@ def getTrackData(track):
     return df
 
 
-@app.route('/albumTracks', methods=['GET'])
+
 def getAlbums(albumId):
     spotifyInfo = getSpotifyInfo(None)
 
@@ -350,7 +348,7 @@ def storeAlbumData(tracks):
     return df
 
 
-@app.route('/audioFeature', methods=['GET'])
+
 def getAudioFeatures():
     spotifyInfo = getSpotifyInfo()
 
@@ -374,7 +372,7 @@ def getAudioFeatures():
     return 'OK.'
 
 
-@app.route('/user/followedArtists', methods=['GET'])
+
 def getUserFollowedArtists():
     SCOPE = 'user-follow-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -392,7 +390,7 @@ def getUserFollowedArtists():
     return 'OK.'
 
 
-@app.route('/user/Playlist', methods=['GET'])
+
 def getUserPlaylists():
     SCOPE = 'playlist-read-private playlist-read-collaborative'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -409,7 +407,7 @@ def getUserPlaylists():
     return df
 
 
-@app.route('/user/playlistItems', methods=['GET'])
+
 def getPlaylistItems():
     SCOPE = 'playlist-read-private'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -432,7 +430,7 @@ def storePlaylistData(playlistItems):
     return df
 
 
-@app.route('/user/playlistForUser', methods=['POST'])
+
 def createPlaylistForUser():
     SCOPE = 'playlist-modify-public playlist-modify-private'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -443,7 +441,7 @@ def createPlaylistForUser():
     return response['external_urls']['spotify']
 
 
-@app.route('/categoryPlaylists', methods=['GET'])
+
 def getCategoryPlaylists():
     spotifyInfo = getSpotifyInfo()
 
@@ -458,7 +456,7 @@ def getCategoryPlaylists():
     return 'OK.'
 
 
-@app.route('/user/genreSeeds', methods=['GET'])
+
 def getAvailableGenreSeeds():
     spotifyInfo = getSpotifyInfo()
 
@@ -468,7 +466,7 @@ def getAvailableGenreSeeds():
     return genres
 
 
-@app.route('/user/recommendations', methods=['GET'])
+
 def getRecommendationsForUser():
     spotifyInfo = getSpotifyInfo(None)
 
@@ -490,7 +488,7 @@ def getRecommendationsForUser():
     return df
 
 
-@app.route('/user/savedEpisodes', methods=['GET'])
+
 def getUserSavedEpisodes():
     SCOPE = 'user-library-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -508,7 +506,7 @@ def getUserSavedEpisodes():
     return 'OK.'
 
 
-@app.route('/user/savedEpisodes', methods=['GET'])
+
 def getEpisodes(id):
     SCOPE = 'user-read-playback-position'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -531,7 +529,7 @@ def storeEpisodes(episodes):
     return df
 
 
-@app.route('/user/saveEpisode', methods=['POST'])
+
 def saveEpisodesForUser():
     SCOPE = 'user-library-modify'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -541,7 +539,6 @@ def saveEpisodesForUser():
     return getEpisode(episodeList[0])
 
 
-@app.route('/user/savedShows', methods=['GET'])
 def getUserSavedShows():
     SCOPE = 'user-library-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -559,7 +556,7 @@ def getUserSavedShows():
     return 'OK.'
 
 
-@app.route('/user/saveShows', methods=['POST'])
+
 def saveShowsForUser():
     SCOPE = 'user-library-modify'
     spotifyInfo = getSpotifyInfo(SCOPE)
@@ -589,7 +586,7 @@ def storeEpisodeData(episode):
     return df
 
 
-@app.route('/audioAnalysis', methods=['GET'])
+
 def getAudioAnalysis():
     spotifyInfo = getSpotifyInfo()
 
