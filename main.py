@@ -23,15 +23,27 @@ client = discord.Client()
 
 client = commands.Bot(command_prefix=">")
 
+
 @client.event
 async def on_ready():
     print("I am ready")
 
+
+@client.command()
+async def makeJoke(ctx):
+    f = open("jokeFile/jokes.json")
+    data = json.load(f)
+    rand = random.randint(0, 3772)
+    embed = discord.Embed(description=data[rand]['body'])
+    await ctx.send(embed=embed)
+
+
 @client.command()
 async def movie(ctx):
-  film = get_film()
-  await ctx.send(embed = film)
-  
+    film = get_film()
+    await ctx.send(embed=film)
+
+
 @client.command()
 async def hello(ctx):
     await ctx.send("Hello, I'm Asclepius.")
@@ -44,7 +56,6 @@ def speechRecognition():
         audio_data = r.record(source)
         text = r.recognize_google(audio_data)
         print(text)
-
 
 
 @client.command()
@@ -65,14 +76,15 @@ async def stopRecord(ctx):
 async def breathe(ctx):
     gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
     rand = random.randrange(0, len(gifs))
-    gifPath = "breatheExerciseGif/"+gifs[rand]
+    gifPath = "breatheExerciseGif/" + gifs[rand]
     with open(gifPath, 'rb') as gif:
         exerciseGif = discord.File(gif)
         await ctx.send(file=exerciseGif)
 
+
 @client.command()
 async def youtube(ctx, *args):
-    if(len(args) == 0):
+    if (len(args) == 0):
         await ctx.send("Please give an argument")
         return
 
