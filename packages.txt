@@ -5,3 +5,5 @@ configparser
 pandas
 requests
 requests-oauthlib
+json
+csv
