@@ -49,6 +49,15 @@ async def hello(ctx):
     await ctx.send("Hello, I'm Asclepius.")
 
 
+@client.command()
+async def getQuote(ctx):
+    response = requests.get('https://api.quotable.io/random')
+    r = response.json()
+    embed = discord.Embed(title=r['content'], color=discord.Color.random())
+    embed.set_footer(text=r['author'])
+    await ctx.send(embed=embed)
+
+
 def speechRecognition():
     filename = "voiceOfAsclepius/records/newOut.wav"
     r = sr.Recognizer()
