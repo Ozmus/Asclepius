@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 import requests
 import json
 import random
+
+from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.TheMovieDatabase import *
 
@@ -27,6 +29,7 @@ client = commands.Bot(command_prefix=">")
 @client.event
 async def on_ready():
     print("I am ready")
+
 
 
 @client.command()
@@ -69,16 +72,7 @@ def speechRecognition():
 
 @client.command()
 async def stopRecord(ctx):
-    path = "voiceOfAsclepius/records"
-    absolutePath = os.path.abspath(path)
-    outFile = absolutePath + "/out.wav"
-    command = f"ffmpeg -f s16le -ar 48000 -ac 2 -i " + path + "/merge.pcm" + " " + outFile
-    os.system(command)
-    os.remove(path + "/merge.pcm")
-    data, samplerate = soundfile.read(outFile)
-    soundfile.write(path + '/newOut.wav', data, samplerate, subtype="PCM_16")
-    os.remove(outFile)
-    speechRecognition()
+    stopSoundRecord(ctx)
 
 
 @client.command()
