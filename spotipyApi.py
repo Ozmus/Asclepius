@@ -234,14 +234,14 @@ def getRecentlyPlayedTracks():
 
     df = pandas.DataFrame(results, columns=['id', 'name', 'artist', 'href', 'external_urls'])
     openWorksheet('User Recently Played Tracks').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return df
 
 
 @app.route('/user/relatedArtists', methods=['GET'])
 def getRelatedArtists():
     spotifyInfo = getSpotifyInfo()
 
-    artists = spotifyInfo.artist_related_artists('2RQ8NtUmg5y6tfbvCwX8jI')['artists']
+    artists = spotifyInfo.artist_related_artists(getUserTopArtist['id'][0])['artists']
     results = []
 
     for item in artists:
@@ -313,6 +313,11 @@ def getTrack(id):
     spotifyInfo = getSpotifyInfo(None)
 
     track = spotifyInfo.track(id)
+    df = getTrackData(track)
+    return df
+
+
+def getTrackData(track):
     results = []
 
     obj = {'id': track['id'], 'name': track['name'], 'artist': ' '.join(n['name'] for n in track['artists']),
@@ -323,10 +328,15 @@ def getTrack(id):
 
 
 @app.route('/albumTracks', methods=['GET'])
-def getAlbums():
+def getAlbums(albumId):
     spotifyInfo = getSpotifyInfo(None)
 
-    tracks = spotifyInfo.album_tracks('0HcHPBu9aaF1MxOiZmUQTl', limit=30, offset=0, market=None)['items']
+    tracks = spotifyInfo.album_tracks(albumId, limit=30, offset=0, market=None)['items']
+    df = storeAlbumData(tracks)
+    return df
+
+
+def storeAlbumData(tracks):
     results = []
 
     for item in tracks:
@@ -387,7 +397,7 @@ def getUserPlaylists():
     SCOPE = 'playlist-read-private playlist-read-collaborative'
     spotifyInfo = getSpotifyInfo(SCOPE)
 
-    playlists = spotifyInfo.user_playlists('nonolala99', limit=5, offset=0)['items']
+    playlists = spotifyInfo.user_playlists(limit=5, offset=0)['items']
     results = []
 
     for item in playlists:
@@ -405,6 +415,11 @@ def getPlaylistItems():
     spotifyInfo = getSpotifyInfo(SCOPE)
 
     playlistItems = spotifyInfo.playlist_items('1bWn2njrDAK1q8hrk48Jaf', limit=15, offset=0)['items']
+    df = storePlaylistData(playlistItems)
+    return df
+
+
+def storePlaylistData(playlistItems):
     results = []
 
     for item in playlistItems:
@@ -422,8 +437,7 @@ def createPlaylistForUser():
     SCOPE = 'playlist-modify-public playlist-modify-private'
     spotifyInfo = getSpotifyInfo(SCOPE)
 
-    tracks = ['6mPJvjjx7pcfZuI57Dh95o', '2takcwOaAZWiXQijPHIx7B', '6lCvK2AR2uOKkVFCVlAzzm', '0y6kdSRCVQhSsHSpWvTUm7',
-              '2NmsngXHeC1GQ9wWrzhOMf']
+    tracks = getRecommendationsForUser()
     response = spotifyInfo.user_playlist_create('nonolala99', 'just for you... from ASCLEPIUS')
     spotifyInfo.playlist_add_items(response['id'], tracks)
     return response['external_urls']['spotify']
@@ -451,7 +465,7 @@ def getAvailableGenreSeeds():
     genres = spotifyInfo.recommendation_genre_seeds()['genres']
     df = pandas.DataFrame(genres, columns=['genres'])
     openWorksheet('Available Genres').update([df.columns.values.tolist()] + df.values.tolist())
-    return 'OK.'
+    return genres
 
 
 @app.route('/user/recommendations', methods=['GET'])
@@ -459,7 +473,7 @@ def getRecommendationsForUser():
     spotifyInfo = getSpotifyInfo(None)
 
     artists = ['01crEa9G3pNpXZ5m7wuHOk']
-    genres = ['pop', 'rock', 'punk']
+    genres = getAvailableGenreSeeds #['pop', 'rock', 'punk']
     tracks = ['4RVwu0g32PAqgUiJoXsdF8']
 
     rec = spotifyInfo.recommendations(seed_artists=artists, seed_genres=genres, seed_tracks=tracks, limit=15)['tracks']
@@ -500,6 +514,11 @@ def getEpisodes(id):
     spotifyInfo = getSpotifyInfo(SCOPE)
 
     episodes = spotifyInfo.show_episodes(id, limit=5, offset=0)['items']
+    df = storeEpisodes(episodes)
+    return df
+
+
+def storeEpisodes(episodes):
     results = []
 
     for item in episodes:
@@ -556,6 +575,11 @@ def getEpisode(id):
     spotifyInfo = getSpotifyInfo(SCOPE)
 
     episode = spotifyInfo.episode(id)
+    df = storeEpisodeData(episode)
+    return df
+
+
+def storeEpisodeData(episode):
     results = []
 
     obj = {'id': episode['id'], 'name': episode['name'],
@@ -597,6 +621,24 @@ def getAudioAnalysis():
                                           'time_signature_confidence', 'start', 'duration', 'confidence',
                                           'loudness_start', 'loudness_max', 'loudness_max_time', 'loudness_end'])
     return ""
+
+
+def search(searchValue, searchType):
+    spotifyInfo = getSpotifyInfo(None)
+    results = spotifyInfo.search(searchValue, type=searchType)
+    openRelatedWorksheet(searchType, results)
+
+
+def openRelatedWorksheet(searchType, results):
+    switcher = {
+        "album": storeAlbumData(results),
+        #  "artist": "",
+        "playlist": storePlaylistData(results),
+        "track": getTrackData(results),
+        "show": storeEpisodes(results),
+        "episode": storeEpisodeData(results)
+    }
+    return switcher.get(searchType)
 
 
 def openWorksheet(sheetName):
