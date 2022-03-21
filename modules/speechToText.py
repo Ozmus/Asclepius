@@ -2,14 +2,16 @@ import soundfile
 import speech_recognition as sr
 import os
 
+from modules.dialogFlow import detectIntent
+
 
 def speechRecognition():
     filename = "voiceOfAsclepius/records/newOut.wav"
     r = sr.Recognizer()
     with sr.AudioFile(filename) as source:
         audio_data = r.record(source)
-        text = r.recognize_google(audio_data)
-        print(text)
+        text = r.recognize_google(audio_data, language="en-EN")
+        return text
 
 
 def stopSoundRecord(ctx):
@@ -22,4 +24,6 @@ def stopSoundRecord(ctx):
     data, samplerate = soundfile.read(outFile)
     soundfile.write(path + '/newOut.wav', data, samplerate, subtype="PCM_16")
     os.remove(outFile)
-    speechRecognition()
+    text = speechRecognition()
+    print(text)
+    detectIntent(text)

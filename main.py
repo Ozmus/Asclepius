@@ -1,17 +1,8 @@
-import os
-import random
 from os import listdir
 from os.path import isfile, join
 
-import discord
-import speech_recognition as sr
-import soundfile
-import requests
-
 from discord.ext import commands
-from dotenv import load_dotenv
-import requests
-import json
+
 import random
 
 from modules.speechToText import stopSoundRecord
@@ -29,7 +20,6 @@ client = commands.Bot(command_prefix=">")
 @client.event
 async def on_ready():
     print("I am ready")
-
 
 
 @client.command()
@@ -59,15 +49,6 @@ async def getQuote(ctx):
     embed = discord.Embed(title=r['content'], color=discord.Color.random())
     embed.set_footer(text=r['author'])
     await ctx.send(embed=embed)
-
-
-def speechRecognition():
-    filename = "voiceOfAsclepius/records/newOut.wav"
-    r = sr.Recognizer()
-    with sr.AudioFile(filename) as source:
-        audio_data = r.record(source)
-        text = r.recognize_google(audio_data)
-        print(text)
 
 
 @client.command()
