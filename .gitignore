@@ -1,8 +1,8 @@
 .idea
 __pycache__
 venv
-.env
 .cache
 asclepius-spotify-data.json
 /voiceOfAsclepius/node_modules/
-apiCalls.py
+/.env
+__pycache__/

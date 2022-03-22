@@ -14,8 +14,12 @@ client.on("message", async message => {
 
     if (message.content === ">record") {
 
-            var fileName = __dirname+ "/records/merge.pcm";
-            outputStream = fs.createWriteStream(fileName);
+        var fileName = __dirname+ "/records/merge.pcm";
+        outputStream = fs.createWriteStream(fileName);
+
+        if (message.member.voice.channel == null) {
+            message.channel.send("Please join a channel.");
+        } else {
             const voiceChannelId = message.member.voice.channel.id;
             const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
             await voiceChannel.join().then(
@@ -24,20 +28,25 @@ client.on("message", async message => {
                     conn.on('speaking', (user, speaking) => {
                         if (speaking) {
                             const audioStream = reciever.createStream(user, {mode: 'pcm'});
-                            const memberDirectory = __dirname+"/"+message.member.id;
-                            if(!fs.existsSync(memberDirectory)) {
+                            const memberDirectory = __dirname + "/" + message.member.id;
+                            if (!fs.existsSync(memberDirectory)) {
                                 fs.mkdirSync(memberDirectory, {
-                                    recursive : true
+                                    recursive: true
                                 });
                             }
                             let filePath = memberDirectory + "/" + Date.now() + ".pcm";
                             audioStream.pipe(fs.createWriteStream(filePath));
                         }
+
                     });
+
                 }
             ).catch(
-                err => { throw err; }
+                err => {
+                    throw err;
+                }
             );
+        }
     }
 
     if (message.content === ">stopRecord") {

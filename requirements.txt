@@ -2,3 +2,5 @@ SoundFile
 python-dotenv
 discord
 SpeechRecognition
+requests
+numpy
