@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 from google.cloud import dialogflow_v2beta1 as dialogflow
 from google.api_core.exceptions import InvalidArgument
 
+load_dotenv()
 
 def detectIntent(inp):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("PRIVATE-KEY-JSON")
 
-    print(os.environ("GOOGLE_APPLICATION_CREDENTIALS"))
     DIALOGFLOW_PROJECT_ID = 'asclepiusdiscord'
     DIALOGFLOW_LANGUAGE_CODE = 'en'
     SESSION_ID = 'me'
@@ -22,11 +22,8 @@ def detectIntent(inp):
     except InvalidArgument:
         raise
 
-    print("Query text:", response.query_result.query_text)
-    print("Detected intent:", response.query_result.intent)
-    print("Fulfillment text:", response.query_result.fulfillment_text)
-    print("Sentiment score:", response.query_result.sentiment_analysis_result.query_text_sentiment.score)
-
     detectedIntent = response.query_result.intent
     fullfillmentText = response.query_result.fulfillment_text
     sentimentScore = response.query_result.sentiment_analysis_result.query_text_sentiment.score
+
+    return detectedIntent, fullfillmentText, sentimentScore

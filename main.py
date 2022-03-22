@@ -53,7 +53,8 @@ async def getQuote(ctx):
 
 @client.command()
 async def stopRecord(ctx):
-    stopSoundRecord(ctx)
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    await ctx.send(fullfillmentText)
 
 
 @client.command()
