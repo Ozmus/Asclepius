@@ -1,6 +1,7 @@
 from os import listdir
 from os.path import isfile, join
 
+from discord import FFmpegPCMAudio
 from discord.ext import commands
 
 import random
@@ -68,9 +69,77 @@ async def stopRecord(ctx):
 
 
 @client.command()
+async def playNatureSound(ctx):
+    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "natureSounds/" + sounds[rand]
+    if ctx.author.voice:
+        channel = ctx.message.author.voice.channel
+        voice = await channel.connect()
+        source = FFmpegPCMAudio(soundPath)
+        player = voice.play(source)
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
+
+
+@client.command()
+async def pauseNatureSound(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_playing():
+        voice.pause()
+    else:
+        await ctx.send("There is no audio playing in the voice channel")
+
+
+@client.command()
+async def stopNatureSound(ctx):
+    voice = ctx.guild.voice_client
+    voice.stop()
+    await ctx.guild.voice_client.disconnect()
+
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    voice_state = member.guild.voice_client
+    if voice_state is None:
+        # Exiting if the bot it's not connected to a voice channel
+        return
+
+    if len(voice_state.channel.members) == 1:
+        await voice_state.disconnect()
+
+
+@client.command()
+async def changeNatureSound(ctx):
+    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "natureSounds/" + sounds[rand]
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+
+    if ctx.author.voice:
+        if voice.is_playing() or voice.is_paused():
+            voice.stop()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
+        else:
+            await ctx.send("There is no audio playing in the voice channel")
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
+
+
+@client.command()
+async def resumeNatureSound(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_paused():
+        voice.resume()
+    else:
+        await ctx.send("There is no audio playing in the voice channel")
+
+
+@client.command()
 async def breathe(ctx):
     gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
-    rand = random.randrange(0, len(gifs))
+    rand = random.randint(0, len(gifs))
     gifPath = "breatheExerciseGif/" + gifs[rand]
     with open(gifPath, 'rb') as gif:
         exerciseGif = discord.File(gif)
