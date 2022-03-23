@@ -52,6 +52,16 @@ async def getQuote(ctx):
 
 
 @client.command()
+async def getPoem(ctx):
+    response = requests.get('https://www.poemist.com/api/v1/randompoems')
+    r = response.json()
+    r = r[0]
+    embed = discord.Embed(title=r['title'], description=r['content'], color=discord.Color.random())
+    embed.set_author(name=r['poet']['name'], icon_url=r['poet']['photo_avatar_url'])
+    await ctx.send(embed=embed)
+
+
+@client.command()
 async def stopRecord(ctx):
     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await ctx.send(fullfillmentText)
