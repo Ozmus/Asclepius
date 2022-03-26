@@ -154,7 +154,9 @@ async def youtube(ctx, *args):
 
     videos = getVideoFromYoutube(args[0])
     topVideo = videos[0]
-    embed = createEmbed(topVideo)
+    embed = createEmbedForYoutube(topVideo)
+    embed2 = createEmbedForYoutube(videos[1])
+    embed3 = createEmbedForYoutube(videos[2])
     msg =  await ctx.send(embed=embed)
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")

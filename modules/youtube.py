@@ -16,7 +16,7 @@ def getVideoDetails(videoId):
     # print(response)
     return response['items'][0]
 
-def createEmbed(video):
+def createEmbedForYoutube(video):
     videoTitle = video['snippet']['title']
     videoAuthor = video['snippet']['channelTitle']
     videoId = video['id']['videoId']
