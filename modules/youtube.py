@@ -39,3 +39,14 @@ def createEmbedForYoutube(video):
     if showComment: embed.add_field(name="Comments", value=videoCommentCount, inline=True)
     embed.add_field(name="Caption", value= u'\u2713' if videoCaption == "true" else u'\u2717', inline=True)
     return embed
+
+def createEmbedListForYoutube(searchTerm):
+    videos = getVideoFromYoutube(searchTerm)
+    embedList = []
+    for video in videos:
+        embedList.append(createEmbedForYoutube(video))
+
+    return embedList
+
+
+    
