@@ -1,3 +1,4 @@
+import asyncio
 import os
 import random
 from os import listdir
@@ -15,6 +16,7 @@ import json
 import random
 from modules.youtube import *
 from modules.TheMovieDatabase import *
+from modules.Twitter import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -80,6 +82,20 @@ async def youtube(ctx, *args):
     topVideo = videos[0]
     embed = createEmbed(topVideo)
     await ctx.send(embed=embed)
+
+@client.command()
+async def twitter(ctx):
+    authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+    await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+
+    def check(msg):
+        return msg.author == ctx.author and msg.channel == ctx.channel
+    msg = await client.wait_for("message", check=check)
+    authorizationPin = msg.content
+    tweets = getTweets(authToken, authTokenSecret, authorizationPin)
+    for tweet in tweets:
+        print(tweet.full_text)
+
 
 
 client.run(TOKEN)

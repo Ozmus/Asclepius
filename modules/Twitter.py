@@ -1,10 +1,10 @@
-import configparser
 import sys
 import requests
 from requests_oauthlib import OAuth1Session
 import tweepy
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 CONSUMER_KEY = os.getenv('TWITTER_API_KEY')
@@ -24,21 +24,20 @@ def request_token():
     
     return resource_owner_oauth_token, resource_owner_oauth_token_secret
 
-# Use the OAuth Request Token received in the previous step to redirect the user to authorize your developer App for access.
 def get_user_authorization(resource_owner_oauth_token):
 
     authorization_url = f"https://api.twitter.com/oauth/authorize?oauth_token={resource_owner_oauth_token}"
-    authorization_pin = input(f" \n Send the following URL to the user you want to generate access tokens for. \n → {authorization_url} \n This URL will allow the user to authorize your application and generate a PIN. \n Paste PIN here: ")
+    authorization_pin = input(f" \n Send the following URL to the user you want to generate access tokens for. \n → {authorization_url} \n "
+                              f"This URL will allow the user to authorize your application and generate a PIN. \n Paste PIN here: ")
 
     return(authorization_pin)
 
-# Exchange the OAuth Request Token you obtained previously for the user’s Access Tokens.
 def get_user_access_tokens(resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin):
 
-    oauth = OAuth1Session(CONSUMER_KEY, 
-                            client_secret=CONSUMER_SECRET, 
-                            resource_owner_key=resource_owner_oauth_token, 
-                            resource_owner_secret=resource_owner_oauth_token_secret, 
+    oauth = OAuth1Session(  CONSUMER_KEY,
+                            client_secret=CONSUMER_SECRET,
+                            resource_owner_key=resource_owner_oauth_token,
+                            resource_owner_secret=resource_owner_oauth_token_secret,
                             verifier=authorization_pin)
     
     url = "https://api.twitter.com/oauth/access_token"
@@ -50,22 +49,23 @@ def get_user_access_tokens(resource_owner_oauth_token, resource_owner_oauth_toke
         user_id = response['user_id']
         screen_name = response['screen_name']
     except requests.exceptions.RequestException as e:
-            print(e)
-            sys.exit(120)
+        print(e)
+        sys.exit(120)
 
     return(access_token, access_token_secret, user_id, screen_name)
 
-if __name__ == '__main__':
+def authorizationTwitter():
     resource_owner_oauth_token, resource_owner_oauth_token_secret = request_token()
-    authorization_pin = get_user_authorization(resource_owner_oauth_token)
-    access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin)
+    authorization_url = f"https://api.twitter.com/oauth/authorize?oauth_token={resource_owner_oauth_token}"
+    return resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_url
+
+def getTweets(resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin):
+    access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(
+        resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin)
 
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
-    username = screen_name
     new_tweets = api.user_timeline(screen_name = screen_name, count=10, tweet_mode="extended")
-    tweet = new_tweets[0] # An object of class Status (tweepy.models.Status)
-    print(tweet.full_text) # Print the text of the tweet
+    return new_tweets
 
-    # print(f"\n User @handle: {screen_name}", f"\n User ID: {user_id}", f"\n User access token: {access_token}", f" \n User access token secret: {access_token_secret} \n")
