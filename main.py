@@ -152,12 +152,11 @@ async def youtube(ctx, *args):
         await ctx.send("Please give an argument")
         return
 
-    videos = getVideoFromYoutube(args[0])
-    topVideo = videos[0]
-    embed = createEmbedForYoutube(topVideo)
-    embed2 = createEmbedForYoutube(videos[1])
-    embed3 = createEmbedForYoutube(videos[2])
-    msg =  await ctx.send(embed=embed)
+    global embedListForYoutube
+    global youtubeEmbedListIndex
+    youtubeEmbedListIndex = 0
+    embedListForYoutube = createEmbedListForYoutube(args[0])
+    msg =  await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")
 
@@ -187,15 +186,19 @@ async def e(ctx):
 @client.event
 async def on_reaction_add(reaction, user):
     # print(user, "user")
+    global embedListForYoutube
+    global youtubeEmbedListIndex
     if user != client.user:
         if str(reaction.emoji) == "➡️":
-            newSearchResult = "sag"
-            await reaction.message.edit(content = newSearchResult)
+            if youtubeEmbedListIndex < len(embedListForYoutube) - 1 :
+                youtubeEmbedListIndex = youtubeEmbedListIndex + 1
+                await reaction.message.edit(embed = embedListForYoutube[youtubeEmbedListIndex])
             for reaction in reaction.message.reactions:
                 await reaction.remove(user)
         if str(reaction.emoji) == "⬅️":
-            newSearchResult = "sol"
-            await reaction.message.edit(content=newSearchResult)
+            if youtubeEmbedListIndex > 0:
+                youtubeEmbedListIndex = youtubeEmbedListIndex - 1
+                await reaction.message.edit(embed = embedListForYoutube[youtubeEmbedListIndex])
             for reaction in reaction.message.reactions:
                 await reaction.remove(user)
 
