@@ -160,32 +160,8 @@ async def youtube(ctx, *args):
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")
 
-
-@client.command()
-async def x(ctx):
-    try:
-        message = ctx.message
-    except discord.NotFound as e:
-        await ctx.send("Could not find that message")
-        raise e
-    message = await ctx.send("What would you like to change the message to?")
-    def check(m):
-        return True
-    new_text = await client.wait_for("message", check=check)
-    await message.edit(content="the new content of the message")
-
-@client.command()
-async def e(ctx):
-    msg = await ctx.send("working")
-    # reactions = ['\U0001F44D']
-    # for emoji in reactions: 
-    #     await msg.add_reaction(emoji)
-    await msg.add_reaction("⬅️")
-    await msg.add_reaction("➡️")
-
 @client.event
 async def on_reaction_add(reaction, user):
-    # print(user, "user")
     global embedListForYoutube
     global youtubeEmbedListIndex
     if user != client.user:
