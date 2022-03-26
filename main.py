@@ -6,9 +6,9 @@ from discord.ext import commands
 
 import random
 
-from modules.speechToText import stopSoundRecord
+# from modules.speechToText import stopSoundRecord
 from modules.youtube import *
-from modules.TheMovieDatabase import *
+# from modules.TheMovieDatabase import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -23,19 +23,19 @@ async def on_ready():
     print("I am ready")
 
 
-@client.command()
-async def makeJoke(ctx):
-    f = open("jokeFile/jokes.json")
-    data = json.load(f)
-    rand = random.randint(0, 3772)
-    embed = discord.Embed(description=data[rand]['body'])
-    await ctx.send(embed=embed)
+# @client.command()
+# async def makeJoke(ctx):
+#     f = open("jokeFile/jokes.json")
+#     data = json.load(f)
+#     rand = random.randint(0, 3772)
+#     embed = discord.Embed(description=data[rand]['body'])
+#     await ctx.send(embed=embed)
 
 
-@client.command()
-async def movie(ctx):
-    film = get_film()
-    await ctx.send(embed=film)
+# @client.command()
+# async def movie(ctx):
+#     film = get_film()
+#     await ctx.send(embed=film)
 
 
 @client.command()
@@ -62,10 +62,10 @@ async def getPoem(ctx):
     await ctx.send(embed=embed)
 
 
-@client.command()
-async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
-    await ctx.send(fullfillmentText)
+# @client.command()
+# async def stopRecord(ctx):
+#     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+#     await ctx.send(fullfillmentText)
 
 
 @client.command()
@@ -155,7 +155,46 @@ async def youtube(ctx, *args):
     videos = getVideoFromYoutube(args[0])
     topVideo = videos[0]
     embed = createEmbed(topVideo)
-    await ctx.send(embed=embed)
+    msg =  await ctx.send(embed=embed)
+    await msg.add_reaction("⬅️")
+    await msg.add_reaction("➡️")
 
+
+@client.command()
+async def x(ctx):
+    try:
+        message = ctx.message
+    except discord.NotFound as e:
+        await ctx.send("Could not find that message")
+        raise e
+    message = await ctx.send("What would you like to change the message to?")
+    def check(m):
+        return True
+    new_text = await client.wait_for("message", check=check)
+    await message.edit(content="the new content of the message")
+
+@client.command()
+async def e(ctx):
+    msg = await ctx.send("working")
+    # reactions = ['\U0001F44D']
+    # for emoji in reactions: 
+    #     await msg.add_reaction(emoji)
+    await msg.add_reaction("⬅️")
+    await msg.add_reaction("➡️")
+
+@client.event
+async def on_reaction_add(reaction, user):
+    # print(user, "user")
+    if user != client.user:
+        if str(reaction.emoji) == "➡️":
+            newSearchResult = "sag"
+            await reaction.message.edit(content = newSearchResult)
+            for reaction in reaction.message.reactions:
+                await reaction.remove(user)
+        if str(reaction.emoji) == "⬅️":
+            newSearchResult = "sol"
+            await reaction.message.edit(content=newSearchResult)
+            for reaction in reaction.message.reactions:
+                await reaction.remove(user)
 
 client.run(TOKEN)
