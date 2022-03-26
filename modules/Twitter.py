@@ -1,9 +1,11 @@
+import re
 import sys
 import requests
 from requests_oauthlib import OAuth1Session
 import tweepy
 import os
 from dotenv import load_dotenv
+from textblob import TextBlob
 
 
 load_dotenv()
@@ -69,3 +71,14 @@ def getTweets(resource_owner_oauth_token, resource_owner_oauth_token_secret, aut
     new_tweets = api.user_timeline(screen_name = screen_name, count=10, tweet_mode="extended")
     return new_tweets
 
+def parseTweet(tweet):
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
+
+def sentimentAnalysis(tweet):
+        analysis = TextBlob(tweet)
+        if analysis.sentiment.polarity > 0:
+            return 'positive'
+        elif analysis.sentiment.polarity == 0:
+            return 'neutral'
+        else:
+            return 'negative'

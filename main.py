@@ -94,8 +94,6 @@ async def twitter(ctx):
     authorizationPin = msg.content
     tweets = getTweets(authToken, authTokenSecret, authorizationPin)
     for tweet in tweets:
-        print(tweet.full_text)
-
-
+        print(parseTweet(tweet.full_text))
 
 client.run(TOKEN)
