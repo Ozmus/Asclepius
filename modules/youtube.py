@@ -7,7 +7,7 @@ load_dotenv()
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
 def getVideoFromYoutube(searchTerm):
-    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
+    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
     # print(response)
     return response['items']
 
