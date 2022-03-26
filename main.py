@@ -6,9 +6,9 @@ from discord.ext import commands
 
 import random
 
-# from modules.speechToText import stopSoundRecord
+from modules.speechToText import stopSoundRecord
 from modules.youtube import *
-# from modules.TheMovieDatabase import *
+from modules.TheMovieDatabase import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -23,19 +23,19 @@ async def on_ready():
     print("I am ready")
 
 
-# @client.command()
-# async def makeJoke(ctx):
-#     f = open("jokeFile/jokes.json")
-#     data = json.load(f)
-#     rand = random.randint(0, 3772)
-#     embed = discord.Embed(description=data[rand]['body'])
-#     await ctx.send(embed=embed)
+@client.command()
+async def makeJoke(ctx):
+    f = open("jokeFile/jokes.json")
+    data = json.load(f)
+    rand = random.randint(0, 3772)
+    embed = discord.Embed(description=data[rand]['body'])
+    await ctx.send(embed=embed)
 
 
-# @client.command()
-# async def movie(ctx):
-#     film = get_film()
-#     await ctx.send(embed=film)
+@client.command()
+async def movie(ctx):
+    film = get_film()
+    await ctx.send(embed=film)
 
 
 @client.command()
@@ -62,10 +62,10 @@ async def getPoem(ctx):
     await ctx.send(embed=embed)
 
 
-# @client.command()
-# async def stopRecord(ctx):
-#     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
-#     await ctx.send(fullfillmentText)
+@client.command()
+async def stopRecord(ctx):
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    await ctx.send(fullfillmentText)
 
 
 @client.command()
