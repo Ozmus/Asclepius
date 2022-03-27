@@ -7,7 +7,7 @@ load_dotenv()
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
 def getVideoFromYoutube(searchTerm):
-    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
+    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
     # print(response)
     return response['items']
 
@@ -16,7 +16,8 @@ def getVideoDetails(videoId):
     # print(response)
     return response['items'][0]
 
-def createEmbed(video):
+def createEmbedForYoutube(video):
+    print(video)
     videoTitle = video['snippet']['title']
     videoAuthor = video['snippet']['channelTitle']
     videoId = video['id']['videoId']
@@ -39,3 +40,14 @@ def createEmbed(video):
     if showComment: embed.add_field(name="Comments", value=videoCommentCount, inline=True)
     embed.add_field(name="Caption", value= u'\u2713' if videoCaption == "true" else u'\u2717', inline=True)
     return embed
+
+def createEmbedListForYoutube(searchTerm):
+    videos = getVideoFromYoutube(searchTerm)
+    embedList = []
+    for video in videos:
+        embedList.append(createEmbedForYoutube(video))
+
+    return embedList
+
+
+    
