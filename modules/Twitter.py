@@ -68,8 +68,10 @@ def getTweets(resource_owner_oauth_token, resource_owner_oauth_token_secret, aut
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
-    new_tweets = api.user_timeline(screen_name = screen_name, count=10, tweet_mode="extended")
-    return new_tweets
+    new_tweets = api.user_timeline(screen_name=screen_name, count=10, tweet_mode="extended")
+    likes = api.get_favorites(screen_name=screen_name, count=10, tweet_mode="extended")
+    tweetsCombination = new_tweets + likes
+    return tweetsCombination
 
 def parseTweet(tweet):
         return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
