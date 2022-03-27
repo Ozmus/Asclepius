@@ -1,6 +1,7 @@
-SoundFile
-python-dotenv
-discord
+SoundFile~=0.10.3.post1
+python-dotenv~=0.19.2
+discord~=1.7.3
 SpeechRecognition
-requests
-numpy
+google-cloud-dialogflow
+requests~=2.26.0
+numpy~=1.21.2
