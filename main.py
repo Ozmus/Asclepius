@@ -1,4 +1,3 @@
-import asyncio
 import random
 from os import listdir
 from os.path import isfile, join
@@ -29,8 +28,7 @@ commandList = {
 }
 
 load_dotenv()
-GUILD = os.getenv('DISCORD_GUILD')
-GENEL = os.getenv('DISCORD_GENEL')
+
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
