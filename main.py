@@ -9,6 +9,7 @@ import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
+from modules.Twitter import *
 
 #TODO baska yere cekilecek konusulduktan sonra
 commandList = {
@@ -27,6 +28,7 @@ commandList = {
 }
 
 load_dotenv()
+
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
@@ -348,5 +350,17 @@ async def getTrack(ctx, arg1):
         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
 
+@client.command()
+async def twitter(ctx):
+    authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+    await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+
+    def check(msg):
+        return msg.author == ctx.author and msg.channel == ctx.channel
+    msg = await client.wait_for("message", check=check)
+    authorizationPin = msg.content
+    tweets = getTweets(authToken, authTokenSecret, authorizationPin)
+    for tweet in tweets:
+        print(parseTweet(tweet.full_text))
 
 client.run(TOKEN)
