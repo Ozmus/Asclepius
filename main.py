@@ -1,21 +1,20 @@
+import random
 from os import listdir
 from os.path import isfile, join
 
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
-import random
-
+import modules.spotipyApi as spotify
+from modules.TheMovieDatabase import *
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
-from modules.TheMovieDatabase import *
 
-import spotipyApi as spotiApi
-
+#TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
-    3: {"command": "getPlaylist", "description": "Asclepius can get your playlist."},
+    3: {"command": "getMyPlaylist", "description": "Asclepius can get your playlist."},
     4: {"command": "recommendMe", "description": "Asclepius' recommendations for you."},
     5: {"command": "saveShow", "description": "Asclepius can save shows for you."},
     6: {"command": "saveEp", "description": "Asclepius can save episodes for you."},
@@ -27,13 +26,11 @@ commandList = {
     12: {"command": "priTalk", "description": "Asclepius can talk with you in dm!"}
 }
 
-
 load_dotenv()
 GUILD = os.getenv('DISCORD_GUILD')
 GENEL = os.getenv('DISCORD_GENEL')
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
-
 
 # client = discord.Client(intents=intents)
 TOKEN = os.getenv('TOKEN')
@@ -160,7 +157,7 @@ async def resumeNatureSound(ctx):
 @client.command()
 async def breathe(ctx):
     gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
-    rand = random.randint(0, len(gifs))
+    rand = random.randrange(0, len(gifs))
     gifPath = "breatheExerciseGif/" + gifs[rand]
     with open(gifPath, 'rb') as gif:
         exerciseGif = discord.File(gif)
@@ -177,9 +174,29 @@ async def youtube(ctx, *args):
     global youtubeEmbedListIndex
     youtubeEmbedListIndex = 0
     embedListForYoutube = createEmbedListForYoutube(args[0])
-    msg =  await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
+    msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")
+
+
+@client.event
+async def on_reaction_add(reaction, user):
+    global embedListForYoutube
+    global youtubeEmbedListIndex
+    if user != client.user:
+        if str(reaction.emoji) == "➡️":
+            if youtubeEmbedListIndex < len(embedListForYoutube) - 1:
+                youtubeEmbedListIndex = youtubeEmbedListIndex + 1
+                await reaction.message.edit(embed=embedListForYoutube[youtubeEmbedListIndex])
+            for reaction in reaction.message.reactions:
+                await reaction.remove(user)
+        if str(reaction.emoji) == "⬅️":
+            if youtubeEmbedListIndex > 0:
+                youtubeEmbedListIndex = youtubeEmbedListIndex - 1
+                await reaction.message.edit(embed=embedListForYoutube[youtubeEmbedListIndex])
+            for reaction in reaction.message.reactions:
+                await reaction.remove(user)
+
 
 @client.command()
 async def asc(ctx):
@@ -198,19 +215,19 @@ async def newReleases(ctx):
                           description="Here's all the new releases",
                           color=discord.Color.blue())
 
-    for release in spotiApi.getNewReleases().values.tolist():
+    for release in spotify.getNewReleases().values.tolist():
         embed.add_field(name=(release[2] + " : " + release[1]), value=release[3], inline=False)
 
     await ctx.send(embed=embed)
 
 
 @client.command(name="recommendMe")
-async def recommendation(ctx):
+async def recommendation(ctx, arg1):
     embed = discord.Embed(title="New Releases",
                           description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
                           color=discord.Color.dark_gold())
 
-    for rec in spotiApi.getRecommendationsForUser().values.tolist():
+    for rec in spotify.getRecommendationsForUser(arg1).values.tolist():
         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
 
     await ctx.send(embed=embed)
@@ -218,7 +235,6 @@ async def recommendation(ctx):
 
 @client.event
 async def on_member_join(member):
-    print("---------------")
     print(member)
     await member.create_dm()
     await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
@@ -228,7 +244,6 @@ async def on_member_join(member):
 async def on_message(msg):
     if msg.author == client.user:
         return
-    print(str(msg.content))
     if isinstance(msg.channel, discord.channel.DMChannel):
         await msg.channel.send(str(msg.content + " - from Asclepius"))
 
@@ -243,59 +258,42 @@ async def on_message(msg):
 
 
 @client.command(name="createPlaylist")
-async def createPlaylist(ctx):
+async def createPlaylist(ctx, arg1):
     embed = discord.Embed(title="NEW PLAYLIST",
-                          description="ENJOY! -> " + spotiApi.createPlaylistForUser(),
+                          description="ENJOY! -> " + spotify.createPlaylistForUser(arg1),
                           color=discord.Color.dark_gold())
 
     await ctx.send(embed=embed)
 
-@client.event
-async def on_reaction_add(reaction, user):
-    global embedListForYoutube
-    global youtubeEmbedListIndex
-    if user != client.user:
-        if str(reaction.emoji) == "➡️":
-            if youtubeEmbedListIndex < len(embedListForYoutube) - 1 :
-                youtubeEmbedListIndex = youtubeEmbedListIndex + 1
-                await reaction.message.edit(embed = embedListForYoutube[youtubeEmbedListIndex])
-            for reaction in reaction.message.reactions:
-                await reaction.remove(user)
-        if str(reaction.emoji) == "⬅️":
-            if youtubeEmbedListIndex > 0:
-                youtubeEmbedListIndex = youtubeEmbedListIndex - 1
-                await reaction.message.edit(embed = embedListForYoutube[youtubeEmbedListIndex])
-            for reaction in reaction.message.reactions:
-                await reaction.remove(user)
 
 @client.command(name="showPlaylist")
-async def getPlaylist(ctx):
+async def getPlaylist(ctx, arg1):
     embed = discord.Embed(title="Current Tracks in Playlist",
                           color=discord.Color.dark_green())
 
-    for rec in spotiApi.getPlaylistItems().values.tolist():
+    for rec in spotify.getPlaylistItems(arg1).values.tolist():
         embed.add_field(name=rec[1], value=rec[2], inline=False)
 
     await ctx.send(embed=embed)
 
 
 @client.command(name="getAlbum")
-async def getAlbumTracks(ctx):
+async def getAlbumTracks(ctx, arg1):
     embed = discord.Embed(title="Current Tracks in Album",
                           color=discord.Color.dark_magenta())
 
-    for rec in spotiApi.getAlbums().values.tolist():
+    for rec in spotify.getAlbums(arg1).values.tolist():
         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
 
     await ctx.send(embed=embed)
 
 
-@client.command(name="getPlaylist")
+@client.command(name="getMyPlaylist")
 async def getPlaylist(ctx):
     embed = discord.Embed(title="Your Current Playlists",
                           color=discord.Color.dark_orange())
 
-    for rec in spotiApi.getUserPlaylists().values.tolist():
+    for rec in spotify.getUserPlaylists().values.tolist():
         embed.add_field(name=rec[1], value=rec[2], inline=False)
 
     await ctx.send(embed=embed)
@@ -306,7 +304,7 @@ async def getTopArtists(ctx):
     embed = discord.Embed(title="Your Favorite Artists",
                           color=discord.Color.dark_orange())
 
-    for rec in spotiApi.getUserTopArtist().values.tolist():
+    for rec in spotify.getUserTopArtist().values.tolist():
         embed.add_field(name=rec[1], value="Genre: " + rec[2] + " " + rec[4], inline=False)
 
     await ctx.send(embed=embed)
@@ -317,27 +315,26 @@ async def getTopTracks(ctx):
     embed = discord.Embed(title="Your Favorite Tracks",
                           color=discord.Color.blurple())
 
-    for rec in spotiApi.getUserTopTracks().values.tolist():
+    for rec in spotify.getUserTopTracks().values.tolist():
         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
 
     await ctx.send(embed=embed)
 
 
 @client.command(name="saveShow")
-async def saveShow(ctx):
+async def saveShow(ctx, arg1):
     embed = discord.Embed(title="Asclepius saved the show for you.", description="Here's the available episodes.",
                           color=discord.Color.dark_teal())
 
-    for rec in spotiApi.saveShowsForUser().values.tolist():
+    for rec in spotify.saveShowsForUser(arg1).values.tolist():
         embed.add_field(name=rec[1], value=rec[2], inline=False)
 
     await ctx.send(embed=embed)
 
 
 @client.command(name="saveEp")
-async def saveEpisode(ctx):
-    ep = spotiApi.saveEpisodesForUser()
-    print(ep)
+async def saveEpisode(ctx, arg1):
+    ep = spotify.saveEpisodesForUser(arg1)
     embed = discord.Embed(title="Asclepius saved the episode for you.",
                           description=ep.iat[0, 1] + " (>‿◠)✌" + ep.iat[0, 2],
                           color=discord.Color.blurple())
@@ -346,15 +343,14 @@ async def saveEpisode(ctx):
 
 
 @client.command(name="getSong")
-async def getTrack(ctx):
-    ep = spotiApi.getTrack('7ouMYWpwJ422jRcDASZB7P')
-    print(ep)
+async def getTrack(ctx, arg1):
     embed = discord.Embed(title="Here's the song!",
                           color=discord.Color.blurple())
 
-    embed.add_field(name=ep.iat[0, 1], value=ep.iat[0, 2] + ": " + ep.iat[0, 3], inline=False)
+    for rec in spotify.getTracks(arg1).values.tolist():
+        embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
 
 
-#client.run(os.getenv('TOKEN'))
+# client.run(os.getenv('TOKEN'))
 client.run(TOKEN)
