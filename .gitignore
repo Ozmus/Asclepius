@@ -1,7 +1,8 @@
-config.ini
-.idea/
-
-
+.idea
+__pycache__
+venv
+.cache
+asclepius-spotify-data.json
 /voiceOfAsclepius/node_modules/
 /.env
 __pycache__/
