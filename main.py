@@ -14,7 +14,7 @@ from modules.youtube import *
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
-    3: {"command": "getMyPlaylist", "description": "Asclepius can get your playlist."},
+    3: {"command": "getMyPlaylists", "description": "Asclepius can get your playlist."},
     4: {"command": "recommendMe", "description": "Asclepius' recommendations for you."},
     5: {"command": "saveShow", "description": "Asclepius can save shows for you."},
     6: {"command": "saveEp", "description": "Asclepius can save episodes for you."},
@@ -32,7 +32,6 @@ GENEL = os.getenv('DISCORD_GENEL')
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
-# client = discord.Client(intents=intents)
 TOKEN = os.getenv('TOKEN')
 
 
@@ -199,7 +198,7 @@ async def on_reaction_add(reaction, user):
 
 
 @client.command()
-async def asc(ctx):
+async def commands(ctx):
     embed = discord.Embed(title="Commands",
                           description="Here's all the things Asclepius can do for you...",
                           color=discord.Color.blue())
@@ -288,7 +287,7 @@ async def getAlbumTracks(ctx, arg1):
     await ctx.send(embed=embed)
 
 
-@client.command(name="getMyPlaylist")
+@client.command(name="getMyPlaylists")
 async def getPlaylist(ctx):
     embed = discord.Embed(title="Your Current Playlists",
                           color=discord.Color.dark_orange())
@@ -352,5 +351,4 @@ async def getTrack(ctx, arg1):
     await ctx.send(embed=embed)
 
 
-# client.run(os.getenv('TOKEN'))
 client.run(TOKEN)
