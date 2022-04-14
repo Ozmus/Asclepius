@@ -5,7 +5,7 @@ from os.path import isfile, join
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
-import modules.spotipyApi as spotify
+# import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
@@ -29,8 +29,8 @@ commandList = {
 
 load_dotenv()
 
-ints = discord.Intents.all()
-client = commands.Bot(command_prefix='>', intents=ints)
+# ints = discord.Intents.all()
+client = commands.Bot(command_prefix='>')
 
 TOKEN = os.getenv('TOKEN')
 
