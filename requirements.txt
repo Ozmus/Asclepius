@@ -10,3 +10,4 @@ textblob~=0.17.1
 pandas~=1.4.0
 gspread~=5.2.0
 spotipy~=2.19.0
+boto3~=1.21.39

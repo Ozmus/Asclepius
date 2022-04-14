@@ -5,11 +5,15 @@ from os.path import isfile, join
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
-import modules.spotipyApi as spotify
+# import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.Twitter import *
+from dynamoDB.DynamoDBService import *
+from dynamoDB.GetTableEntry import  *
+from dynamoDB.InsertTableEntry import  *
+from dynamoDB.DeleteTableEntry import  *
 
 #TODO baska yere cekilecek konusulduktan sonra
 commandList = {
@@ -33,7 +37,8 @@ ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
 TOKEN = os.getenv('TOKEN')
-
+clientDynamoDB, dynamoDB = connectDynamoDB()
+createTables(clientDynamoDB, dynamoDB)
 
 @client.event
 async def on_ready():
@@ -208,147 +213,147 @@ async def commands(ctx):
     await ctx.send(embed=embed)
 
 
-@client.command(name="newReleases")
-async def newReleases(ctx):
-    embed = discord.Embed(title="New Releases",
-                          description="Here's all the new releases",
-                          color=discord.Color.blue())
-
-    for release in spotify.getNewReleases().values.tolist():
-        embed.add_field(name=(release[2] + " : " + release[1]), value=release[3], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="recommendMe")
-async def recommendation(ctx, arg1):
-    embed = discord.Embed(title="New Releases",
-                          description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
-                          color=discord.Color.dark_gold())
-
-    for rec in spotify.getRecommendationsForUser(arg1).values.tolist():
-        embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.event
-async def on_member_join(member):
-    print(member)
-    await member.create_dm()
-    await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
-
-
-@client.event
-async def on_message(msg):
-    if msg.author == client.user:
-        return
-    if isinstance(msg.channel, discord.channel.DMChannel):
-        await msg.channel.send(str(msg.content + " - from Asclepius"))
-
-    await client.process_commands(msg)
-
-
-@client.command(name="priTalk")
-async def on_message(msg):
-    member = msg.guild.get_member(msg.author.id)
-    await member.create_dm()
-    await member.dm_channel.send(f'Hadi konuşalım {member.name}. ')
-
-
-@client.command(name="createPlaylist")
-async def createPlaylist(ctx, arg1):
-    embed = discord.Embed(title="NEW PLAYLIST",
-                          description="ENJOY! -> " + spotify.createPlaylistForUser(arg1),
-                          color=discord.Color.dark_gold())
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="showPlaylist")
-async def getPlaylist(ctx, arg1):
-    embed = discord.Embed(title="Current Tracks in Playlist",
-                          color=discord.Color.dark_green())
-
-    for rec in spotify.getPlaylistItems(arg1).values.tolist():
-        embed.add_field(name=rec[1], value=rec[2], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="getAlbum")
-async def getAlbumTracks(ctx, arg1):
-    embed = discord.Embed(title="Current Tracks in Album",
-                          color=discord.Color.dark_magenta())
-
-    for rec in spotify.getAlbums(arg1).values.tolist():
-        embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="getMyPlaylists")
-async def getPlaylist(ctx):
-    embed = discord.Embed(title="Your Current Playlists",
-                          color=discord.Color.dark_orange())
-
-    for rec in spotify.getUserPlaylists().values.tolist():
-        embed.add_field(name=rec[1], value=rec[2], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="topArtists")
-async def getTopArtists(ctx):
-    embed = discord.Embed(title="Your Favorite Artists",
-                          color=discord.Color.dark_orange())
-
-    for rec in spotify.getUserTopArtist().values.tolist():
-        embed.add_field(name=rec[1], value="Genre: " + rec[2] + " " + rec[4], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="topTracks")
-async def getTopTracks(ctx):
-    embed = discord.Embed(title="Your Favorite Tracks",
-                          color=discord.Color.blurple())
-
-    for rec in spotify.getUserTopTracks().values.tolist():
-        embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="saveShow")
-async def saveShow(ctx, arg1):
-    embed = discord.Embed(title="Asclepius saved the show for you.", description="Here's the available episodes.",
-                          color=discord.Color.dark_teal())
-
-    for rec in spotify.saveShowsForUser(arg1).values.tolist():
-        embed.add_field(name=rec[1], value=rec[2], inline=False)
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="saveEp")
-async def saveEpisode(ctx, arg1):
-    ep = spotify.saveEpisodesForUser(arg1)
-    embed = discord.Embed(title="Asclepius saved the episode for you.",
-                          description=ep.iat[0, 1] + " (>‿◠)✌" + ep.iat[0, 2],
-                          color=discord.Color.blurple())
-
-    await ctx.send(embed=embed)
-
-
-@client.command(name="getSong")
-async def getTrack(ctx, arg1):
-    embed = discord.Embed(title="Here's the song!",
-                          color=discord.Color.blurple())
-
-    for rec in spotify.getTracks(arg1).values.tolist():
-        embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
-    await ctx.send(embed=embed)
+# @client.command(name="newReleases")
+# async def newReleases(ctx):
+#     embed = discord.Embed(title="New Releases",
+#                           description="Here's all the new releases",
+#                           color=discord.Color.blue())
+#
+#     for release in spotify.getNewReleases().values.tolist():
+#         embed.add_field(name=(release[2] + " : " + release[1]), value=release[3], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="recommendMe")
+# async def recommendation(ctx, arg1):
+#     embed = discord.Embed(title="New Releases",
+#                           description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
+#                           color=discord.Color.dark_gold())
+#
+#     for rec in spotify.getRecommendationsForUser(arg1).values.tolist():
+#         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.event
+# async def on_member_join(member):
+#     print(member)
+#     await member.create_dm()
+#     await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
+#
+#
+# @client.event
+# async def on_message(msg):
+#     if msg.author == client.user:
+#         return
+#     if isinstance(msg.channel, discord.channel.DMChannel):
+#         await msg.channel.send(str(msg.content + " - from Asclepius"))
+#
+#     await client.process_commands(msg)
+#
+#
+# @client.command(name="priTalk")
+# async def on_message(msg):
+#     member = msg.guild.get_member(msg.author.id)
+#     await member.create_dm()
+#     await member.dm_channel.send(f'Hadi konuşalım {member.name}. ')
+#
+#
+# @client.command(name="createPlaylist")
+# async def createPlaylist(ctx, arg1):
+#     embed = discord.Embed(title="NEW PLAYLIST",
+#                           description="ENJOY! -> " + spotify.createPlaylistForUser(arg1),
+#                           color=discord.Color.dark_gold())
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="showPlaylist")
+# async def getPlaylist(ctx, arg1):
+#     embed = discord.Embed(title="Current Tracks in Playlist",
+#                           color=discord.Color.dark_green())
+#
+#     for rec in spotify.getPlaylistItems(arg1).values.tolist():
+#         embed.add_field(name=rec[1], value=rec[2], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="getAlbum")
+# async def getAlbumTracks(ctx, arg1):
+#     embed = discord.Embed(title="Current Tracks in Album",
+#                           color=discord.Color.dark_magenta())
+#
+#     for rec in spotify.getAlbums(arg1).values.tolist():
+#         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="getMyPlaylists")
+# async def getPlaylist(ctx):
+#     embed = discord.Embed(title="Your Current Playlists",
+#                           color=discord.Color.dark_orange())
+#
+#     for rec in spotify.getUserPlaylists().values.tolist():
+#         embed.add_field(name=rec[1], value=rec[2], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="topArtists")
+# async def getTopArtists(ctx):
+#     embed = discord.Embed(title="Your Favorite Artists",
+#                           color=discord.Color.dark_orange())
+#
+#     for rec in spotify.getUserTopArtist().values.tolist():
+#         embed.add_field(name=rec[1], value="Genre: " + rec[2] + " " + rec[4], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="topTracks")
+# async def getTopTracks(ctx):
+#     embed = discord.Embed(title="Your Favorite Tracks",
+#                           color=discord.Color.blurple())
+#
+#     for rec in spotify.getUserTopTracks().values.tolist():
+#         embed.add_field(name=(rec[2] + " : " + rec[1]), value=rec[3], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="saveShow")
+# async def saveShow(ctx, arg1):
+#     embed = discord.Embed(title="Asclepius saved the show for you.", description="Here's the available episodes.",
+#                           color=discord.Color.dark_teal())
+#
+#     for rec in spotify.saveShowsForUser(arg1).values.tolist():
+#         embed.add_field(name=rec[1], value=rec[2], inline=False)
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="saveEp")
+# async def saveEpisode(ctx, arg1):
+#     ep = spotify.saveEpisodesForUser(arg1)
+#     embed = discord.Embed(title="Asclepius saved the episode for you.",
+#                           description=ep.iat[0, 1] + " (>‿◠)✌" + ep.iat[0, 2],
+#                           color=discord.Color.blurple())
+#
+#     await ctx.send(embed=embed)
+#
+#
+# @client.command(name="getSong")
+# async def getTrack(ctx, arg1):
+#     embed = discord.Embed(title="Here's the song!",
+#                           color=discord.Color.blurple())
+#
+#     for rec in spotify.getTracks(arg1).values.tolist():
+#         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
+#     await ctx.send(embed=embed)
 
 @client.command()
 async def twitter(ctx):
