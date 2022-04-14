@@ -5,3 +5,9 @@ SpeechRecognition
 google-cloud-dialogflow
 requests~=2.26.0
 numpy~=1.21.2
+pip~=22.0.3
+setuptools~=57.0.0
+gspread~=5.1.1
+pandas~=1.4.0
+spotipy~=2.19.0
+Flask~=2.0.2
