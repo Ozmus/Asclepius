@@ -2,6 +2,7 @@ import boto3
 from dotenv import load_dotenv
 import os
 from dynamoDB.tables.TwitterCredentials import *
+from dynamoDB.tables.SpotifyCredentials import *
 
 
 load_dotenv()
@@ -31,6 +32,33 @@ def createTables(client, dynamodb):
     if 'TwitterCredentials' not in existing_tables:
         twitter_credentials = TwitterCredentials(dynamodb)
         twitter_credentials.create_table('TwitterCredentials')
+    if 'SpotifyCredentials' not in existing_tables:
+        spotify_credentials = SpotifyCredentials(dynamodb)
+        spotify_credentials.create_table('SpotifyCredentials')
+
+
+# to add new entry to spotify
+
+# add_spotify_credentials(
+#     dynamo_db=dynamodb,
+#     discord_id='5415dasdaasd1as56f1as65f1as65asf1as65',
+#     access_token='asdjasd',
+#     refresh_token='oksfdsdf5sd1f65sdf1sfd'
+# )
+
+
+
+# to get an entry from table
+
+# try:
+#     spotify_credentials = get_spotify_credentials(
+#         dynamo_db=dynamodb,
+#         discord_id='5415dasdaasd1as56f1as65f1as65asf1as65'
+#     )
+# except:
+#     print('exception')
+# print(twitter_credentials)
+
 
 # add_twitter_credentials(
 #     dynamo_db=dynamodb,

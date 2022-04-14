@@ -19,3 +19,18 @@ def add_twitter_credentials(dynamo_db, discord_id, username, user_id, access_tok
             err.response['Error']['Code'], err.response['Error']['Message'])
         raise
 
+def add_spotify_credentials(dynamo_db, discord_id, access_token, refresh_token):
+    try:
+        table = dynamo_db.Table('SpotifyCredentials')
+        table.put_item(
+            Item={
+                'discord_id': discord_id,
+                'access_token': access_token,
+                'refresh_token': refresh_token})
+    except ClientError as err:
+        logger.error(
+            "Couldn't add spotify credentials %s to table %s. Here's why: %s: %s",
+            discord_id, table.name,
+            err.response['Error']['Code'], err.response['Error']['Message'])
+        raise
+
