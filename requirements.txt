@@ -3,7 +3,7 @@ python-dotenv~=0.19.2
 discord~=1.7.3
 SpeechRecognition
 google-cloud-dialogflow
-requests~=2.26.0
+requests
 numpy~=1.21.2
 tweepy~=4.5.0
 textblob~=0.17.1
