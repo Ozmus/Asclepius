@@ -357,15 +357,31 @@ async def commands(ctx):
 
 @client.command()
 async def twitter(ctx):
-    authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-    await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+    isAuthorizedUser = True
+    discord_id = str(ctx.author.id)
+    try:
+        twitter_credentials = get_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id)
+        tweets = getTweetsKnownAccessToken(twitter_credentials['access_token'],
+                                           twitter_credentials['access_token_secret'],
+                                           twitter_credentials['username'])
+        for tweet in tweets:
+            print(parseTweet(tweet.full_text))
+    except:
+        isAuthorizedUser = False
 
-    def check(msg):
-        return msg.author == ctx.author and msg.channel == ctx.channel
-    msg = await client.wait_for("message", check=check)
-    authorizationPin = msg.content
-    tweets = getTweets(authToken, authTokenSecret, authorizationPin)
-    for tweet in tweets:
-        print(parseTweet(tweet.full_text))
+    if not isAuthorizedUser:
+        authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+        msg = await client.wait_for("message", check=check)
+        authorizationPin = msg.content
+        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken, authTokenSecret, authorizationPin)
+        add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
+                                access_token=access_token, access_token_secret=access_token_secret)
+        tweets = getTweets(access_token, access_token_secret, screen_name)
+        for tweet in tweets:
+            print(parseTweet(tweet.full_text))
 
 client.run(TOKEN)

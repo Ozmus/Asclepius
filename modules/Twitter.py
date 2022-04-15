@@ -6,7 +6,7 @@ import tweepy
 import os
 from dotenv import load_dotenv
 from textblob import TextBlob
-
+from dynamoDB.InsertTableEntry import *
 
 load_dotenv()
 CONSUMER_KEY = os.getenv('TWITTER_API_KEY')
@@ -61,10 +61,16 @@ def authorizationTwitter():
     authorization_url = f"https://api.twitter.com/oauth/authorize?oauth_token={resource_owner_oauth_token}"
     return resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_url
 
-def getTweets(resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin):
-    access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(
-        resource_owner_oauth_token, resource_owner_oauth_token_secret, authorization_pin)
+def getTweets(access_token, access_token_secret, screen_name):
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
+    new_tweets = api.user_timeline(screen_name=screen_name, count=10, tweet_mode="extended")
+    likes = api.get_favorites(screen_name=screen_name, count=10, tweet_mode="extended")
+    tweetsCombination = new_tweets + likes
+    return tweetsCombination
 
+def getTweetsKnownAccessToken(access_token, access_token_secret, screen_name):
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
