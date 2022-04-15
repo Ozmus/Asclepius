@@ -163,17 +163,23 @@ async def breathe(ctx):
         await ctx.send(file=exerciseGif)
 
 
+# -p playlist, default video
 @client.command()
 async def youtube(ctx, *args):
     if (len(args) == 0):
         await ctx.send("Please give an argument")
         return
-
     global embedListForYoutube
     global youtubeEmbedListIndex
-    youtubeEmbedListIndex = 0
-    embedListForYoutube = createEmbedListForYoutube(args[0])
-    msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
+    if (len(args) == 1):
+       
+        youtubeEmbedListIndex = 0
+        embedListForYoutube = createEmbedListForYoutube(args[0], "video")
+        msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
+    elif (len(args) == 2 and args[0] == "-p"):
+        youtubeEmbedListIndex = 0
+        embedListForYoutube = createEmbedListForYoutube(args[1], "playlist")
+        msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")
 
