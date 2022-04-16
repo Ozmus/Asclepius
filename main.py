@@ -2,21 +2,21 @@ import random
 from os import listdir
 from os.path import isfile, join
 
+import youtube_dl
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
 import modules.spotipyApi as spotify
-from modules.TheMovieDatabase import *
-from modules.dialogFlow import detectIntent
-from modules.speechToText import stopSoundRecord
-from modules.youtube import *
-from modules.Twitter import *
 from dynamoDB.DynamoDBService import *
 from dynamoDB.GetTableEntry import *
 from dynamoDB.InsertTableEntry import *
+from modules.TheMovieDatabase import *
+from modules.Twitter import *
+from modules.dialogFlow import detectIntent
+from modules.speechToText import stopSoundRecord
+from modules.youtube import *
 
-
-#TODO baska yere cekilecek konusulduktan sonra
+# TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -41,9 +41,33 @@ TOKEN = os.getenv('TOKEN')
 clientDynamoDB, dynamoDB = connectDynamoDB()
 createTables(clientDynamoDB, dynamoDB)
 
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+popular_podcast = []
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+
 @client.event
 async def on_ready():
     print("I am ready")
+    getPodcast()
 
 
 @client.command()
@@ -84,15 +108,18 @@ async def getPoem(ctx):
     embed.set_author(name=r['poet']['name'], icon_url=r['poet']['photo_avatar_url'])
     await ctx.send(embed=embed)
 
-def checkIntent(ctx, intent, fulfillmentText):
-    if(intent == 'Twitter'):
-        twitter(ctx)
 
 @client.command()
 async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
     await ctx.send(fullfillmentText)
     checkIntent(ctx, detectedIntent, fullfillmentText)
+
+
+def checkIntent(ctx, intent, fulfillmentText):
+    if (intent == 'Twitter'):
+        twitter(ctx)
+
 
 @client.command()
 async def playNatureSound(ctx):
@@ -244,8 +271,8 @@ async def recommendation(ctx, arg1):
 @client.event
 async def on_member_join(member):
     print(member)
-    await member.create_dm()
-    await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
+    # await member.create_dm()
+    # await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
 
 
 @client.event
@@ -253,7 +280,8 @@ async def on_message(msg):
     if msg.author == client.user:
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
-        await msg.channel.send(str(msg.content + " - from Asclepius"))
+        _, fullfillmentText, _ = detectIntent(msg.cont)
+        await msg.channel.send(fullfillmentText)
 
     await client.process_commands(msg)
 
@@ -359,6 +387,105 @@ async def getTrack(ctx, arg1):
         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
 
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+        self.data = data
+        self.title = data.get('title')
+        self.url = ""
+
+
+@client.command(name='playSong')
+async def play(ctx, url):
+    await join(ctx)
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+        song_info = ytdl.extract_info(url, download=False)
+        voice_channel.play(discord.FFmpegPCMAudio(song_info["formats"][0]["url"]))
+        voice_channel.source = discord.PCMVolumeTransformer(voice_channel.source)
+        voice_channel.source.volume = 1
+
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+@client.event
+async def on_guild_join(guild):
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+            await channel.send('Hey there! this is the message i send when i join a server')
+        break
+
+
+@client.command(name='playPod')
+async def playPodcast(ctx):
+    await join(ctx)
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+
+        async with ctx.typing():
+            source = popular_podcast[random.randint(0, len(popular_podcast) - 1)]
+            voice_channel.play(
+                discord.FFmpegPCMAudio(source=source))
+        await ctx.send('**Now playing:** {}'.format(source))
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+async def join(ctx):
+    if not ctx.message.author.voice:
+        await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+        return
+    else:
+        channel = ctx.message.author.voice.channel
+    await channel.connect()
+
+
+@client.command(name='pause')
+async def pause(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_playing():
+        await voice_client.pause()
+    else:
+        await ctx.send("The bot is not playing anything at the moment.")
+
+
+@client.command(name='resume')
+async def resume(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_paused():
+        await voice_client.resume()
+    else:
+        await ctx.send("The bot was not playing anything before this. Use play_song command")
+
+
+@client.command(name='leave')
+async def leave(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_connected():
+        await voice_client.disconnect()
+    else:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+@client.command(name='stop')
+async def stop(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_playing():
+        await voice_client.stop()
+    else:
+        await ctx.send("The bot is not playing anything at the moment.")
+
+
+def getPodcast():
+    response = requests.get("https://api.audioboom.com/audio_clips/popular")
+    for audios in json.loads(response.text)['body']['audio_clips']:
+        popular_podcast.append(audios['urls']['high_mp3'])
+
+
 @client.command()
 async def twitter(ctx):
     isAuthorizedUser = True
@@ -393,6 +520,7 @@ async def twitter(ctx):
 
         def check(msg):
             return msg.author == ctx.author and msg.channel == ctx.channel
+
         msg = await client.wait_for("message", check=check)
         authorizationPin = msg.content
         access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
@@ -417,4 +545,6 @@ async def twitter(ctx):
             await ctx.send("You could be much happier :)")
         else:
             await ctx.send("Sorry for you :(")
+
+
 client.run(TOKEN)

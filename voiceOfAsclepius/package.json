@@ -20,7 +20,8 @@
     "prism-media": "^2.0.0-alpha.0",
     "stream.js": "^1.0.1",
     "wav": "^1.0.2",
-    "xhr2": "^0.2.1"
+    "xhr2": "^0.2.1",
+    "ytdl-core": "^4.11.0"
   },
   "description": ""
 }
