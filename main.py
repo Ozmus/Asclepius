@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isfile, join
 
 import discord
+import youtube_dl as youtube_dl
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
@@ -16,8 +17,7 @@ from dynamoDB.DynamoDBService import *
 from dynamoDB.GetTableEntry import *
 from dynamoDB.InsertTableEntry import *
 
-
-#TODO baska yere cekilecek konusulduktan sonra
+# TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -44,9 +44,33 @@ TOKEN = os.getenv('TOKEN')
 clientDynamoDB, dynamoDB = connectDynamoDB()
 createTables(clientDynamoDB, dynamoDB)
 
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+popular_podcast = []
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+
 @client.event
 async def on_ready():
     print("I am ready")
+    getPodcast()
 
 
 @client.command()
@@ -96,7 +120,8 @@ async def recipe(ctx):
             str = str + measures[i] + " " + ingredients[i] + "\n"
 
         embed.add_field(name="Ingredients", value=str, inline=False)
-        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
+        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'],
+                        inline=False)
         await ctx.send(embed=embed)
     except:
         await ctx.send("Something went wrong. Please try again :(")
@@ -124,13 +149,15 @@ async def playSound(ctx):
     embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
     await ctx.send(embed=embed)
 
+
 def checkIntent(ctx, intent, fulfillmentText):
-    if(intent == 'Twitter'):
+    if (intent == 'Twitter'):
         twitter(ctx)
+
 
 @client.command()
 async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
     await ctx.send(fullfillmentText)
 
 
@@ -279,6 +306,7 @@ async def youtube(ctx, *args):
     if (len(args) == 0):
         await ctx.send("Please give an argument")
         return
+
     global embedListForYoutube
     global youtubeEmbedListIndex
     if (len(args) == 1):
@@ -360,7 +388,8 @@ async def on_message(msg):
     if msg.author == client.user:
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
-        await msg.channel.send(str(msg.content + " - from Asclepius"))
+        _, fullfillmentText, _ = detectIntent(msg.cont)
+        await msg.channel.send(fullfillmentText)
 
     await client.process_commands(msg)
 
@@ -467,6 +496,69 @@ async def getTrack(ctx, arg1):
     await ctx.send(embed=embed)
 
 
+@client.command(name='playSong')
+async def play(ctx, url):
+    await join(ctx)
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+        song_info = ytdl.extract_info(url, download=False)
+        voice_channel.play(discord.FFmpegPCMAudio(song_info["formats"][0]["url"]))
+        voice_channel.source = discord.PCMVolumeTransformer(voice_channel.source)
+        voice_channel.source.volume = 1
+
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+@client.event
+async def on_guild_join(guild):
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+            await channel.send('Hey there! this is the message i send when i join a server')
+        break
+
+
+@client.command(name='playPod')
+async def playPodcast(ctx):
+    await join(ctx)
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+
+        async with ctx.typing():
+            source = popular_podcast[random.randint(0, len(popular_podcast) - 1)]
+            voice_channel.play(
+                discord.FFmpegPCMAudio(source=source))
+        await ctx.send('**Now playing:** {}'.format(source))
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+async def join(ctx):
+    if not ctx.message.author.voice:
+        await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+        return
+    else:
+        channel = ctx.message.author.voice.channel
+    await channel.connect()
+
+
+@client.command(name='leave')
+async def leave(ctx):
+    voice_client = ctx.message.guild.voice_client
+    if voice_client.is_connected():
+        await voice_client.disconnect()
+    else:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
+def getPodcast():
+    response = requests.get("https://api.audioboom.com/audio_clips/popular")
+    for audios in json.loads(response.text)['body']['audio_clips']:
+        popular_podcast.append(audios['urls']['high_mp3'])
+
+
 @client.command()
 async def twitter(ctx):
     isAuthorizedUser = True
@@ -484,26 +576,27 @@ async def twitter(ctx):
     except:
         isAuthorizedUser = False
 
-    if not isAuthorizedUser:
-        authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
-                       f"\n → {authorizationURL}")
+        if not isAuthorizedUser:
+            authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+            await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
+                           f"\n → {authorizationURL}")
 
-        def check(msg):
-            return msg.author == ctx.author and msg.channel == ctx.channel
-        msg = await client.wait_for("message", check=check)
-        authorizationPin = msg.content
-        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
-                                                                                         authTokenSecret,
-                                                                                         authorizationPin)
-        add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
-                                access_token=access_token, access_token_secret=access_token_secret)
-        tweets = getTweets(access_token, access_token_secret, screen_name)
-        sentiment_score = getSentimentResult(tweets)
-        if sentiment_score > 0:
-            await ctx.send("Happy for you :)")
-        else:
-            await ctx.send("Sorry for you :(")
+            def check(msg):
+                return msg.author == ctx.author and msg.channel == ctx.channel
+
+            msg = await client.wait_for("message", check=check)
+            authorizationPin = msg.content
+            access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
+                                                                                             authTokenSecret,
+                                                                                             authorizationPin)
+            add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
+                                    access_token=access_token, access_token_secret=access_token_secret)
+            tweets = getTweets(access_token, access_token_secret, screen_name)
+            sentiment_score = getSentimentResult(tweets)
+            if sentiment_score > 0:
+                await ctx.send("Happy for you :)")
+            else:
+                await ctx.send("Sorry for you :(")
 
 
 client.run(TOKEN)
