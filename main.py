@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isfile, join
 
 import discord
+import youtube_dl as youtube_dl
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
@@ -16,8 +17,7 @@ from dynamoDB.DynamoDBService import *
 from dynamoDB.GetTableEntry import *
 from dynamoDB.InsertTableEntry import *
 
-
-#TODO baska yere cekilecek konusulduktan sonra
+# TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -120,7 +120,8 @@ async def recipe(ctx):
             str = str + measures[i] + " " + ingredients[i] + "\n"
 
         embed.add_field(name="Ingredients", value=str, inline=False)
-        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
+        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'],
+                        inline=False)
         await ctx.send(embed=embed)
     except:
         await ctx.send("Something went wrong. Please try again :(")
@@ -148,13 +149,15 @@ async def playSound(ctx):
     embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
     await ctx.send(embed=embed)
 
+
 def checkIntent(ctx, intent, fulfillmentText):
-    if(intent == 'Twitter'):
+    if (intent == 'Twitter'):
         twitter(ctx)
+
 
 @client.command()
 async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
     await ctx.send(fullfillmentText)
 
 
@@ -493,15 +496,6 @@ async def getTrack(ctx, arg1):
     await ctx.send(embed=embed)
 
 
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = ""
-
-
 @client.command(name='playSong')
 async def play(ctx, url):
     await join(ctx)
@@ -550,24 +544,6 @@ async def join(ctx):
     await channel.connect()
 
 
-@client.command(name='pause')
-async def pause(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_playing():
-        await voice_client.pause()
-    else:
-        await ctx.send("The bot is not playing anything at the moment.")
-
-
-@client.command(name='resume')
-async def resume(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_paused():
-        await voice_client.resume()
-    else:
-        await ctx.send("The bot was not playing anything before this. Use play_song command")
-
-
 @client.command(name='leave')
 async def leave(ctx):
     voice_client = ctx.message.guild.voice_client
@@ -575,15 +551,6 @@ async def leave(ctx):
         await voice_client.disconnect()
     else:
         await ctx.send("The bot is not connected to a voice channel.")
-
-
-@client.command(name='stop')
-async def stop(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_playing():
-        await voice_client.stop()
-    else:
-        await ctx.send("The bot is not playing anything at the moment.")
 
 
 def getPodcast():
@@ -604,36 +571,32 @@ async def twitter(ctx):
         sentiment_score = getSentimentResult(tweets)
         if sentiment_score > 0:
             await ctx.send("Happy for you :)")
-        elif avg_score_dialogflow == 0:
-            await ctx.send("You could be much happier :)")
         else:
             await ctx.send("Sorry for you :(")
     except:
         isAuthorizedUser = False
 
-    if not isAuthorizedUser:
-        authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
-                       f"\n → {authorizationURL}")
+        if not isAuthorizedUser:
+            authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+            await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
+                           f"\n → {authorizationURL}")
 
-        def check(msg):
-            return msg.author == ctx.author and msg.channel == ctx.channel
+            def check(msg):
+                return msg.author == ctx.author and msg.channel == ctx.channel
 
-        msg = await client.wait_for("message", check=check)
-        authorizationPin = msg.content
-        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
-                                                                                         authTokenSecret,
-                                                                                         authorizationPin)
-        add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
-                                access_token=access_token, access_token_secret=access_token_secret)
-        tweets = getTweets(access_token, access_token_secret, screen_name)
-        sentiment_score = getSentimentResult(tweets)
-        if sentiment_score > 0:
-            await ctx.send("Happy for you :)")
-        elif avg_score_dialogflow == 0:
-            await ctx.send("You could be much happier :)")
-        else:
-            await ctx.send("Sorry for you :(")
+            msg = await client.wait_for("message", check=check)
+            authorizationPin = msg.content
+            access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
+                                                                                             authTokenSecret,
+                                                                                             authorizationPin)
+            add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
+                                    access_token=access_token, access_token_secret=access_token_secret)
+            tweets = getTweets(access_token, access_token_secret, screen_name)
+            sentiment_score = getSentimentResult(tweets)
+            if sentiment_score > 0:
+                await ctx.send("Happy for you :)")
+            else:
+                await ctx.send("Sorry for you :(")
 
 
 client.run(TOKEN)
