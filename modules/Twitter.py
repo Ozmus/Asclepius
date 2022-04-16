@@ -84,9 +84,10 @@ def parseTweet(tweet):
 
 def sentimentAnalysis(tweet):
         analysis = TextBlob(tweet)
-        if analysis.sentiment.polarity > 0:
-            return 'positive'
-        elif analysis.sentiment.polarity == 0:
-            return 'neutral'
-        else:
-            return 'negative'
+        return analysis.sentiment.polarity
+        # if analysis.sentiment.polarity > 0:
+        #     return 'positive'
+        # elif analysis.sentiment.polarity == 0:
+        #     return 'neutral'
+        # else:
+        #     return 'negative'

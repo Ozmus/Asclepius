@@ -368,12 +368,18 @@ async def twitter(ctx):
         totalSentimentScoreDialogFlow = 0
         totalSentimentScoreTextBlob = 0
         for tweet in tweets:
-            print(parseTweet(tweet.full_text))
-            detectedIntent, fullfillmentText, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
             totalSentimentScoreDialogFlow += sentimentScore
             totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
-        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / 20,
-              "Average TextBlob Score: ", totalSentimentScoreTextBlob / 20)
+        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
+        if avg_score_dialogflow > 0:
+            await ctx.send("Happy for you :)")
+        elif avg_score_dialogflow == 0:
+            await ctx.send("You could be much happier :)")
+        else:
+            await ctx.send("Sorry for you :(")
     except:
         isAuthorizedUser = False
 
@@ -395,11 +401,17 @@ async def twitter(ctx):
         totalSentimentScoreDialogFlow = 0
         totalSentimentScoreTextBlob = 0
         for tweet in tweets:
-            print(parseTweet(tweet.full_text))
-            detectedIntent, fullfillmentText, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
             totalSentimentScoreDialogFlow += sentimentScore
             totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
-        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / 20,
-              "Average TextBlob Score: ", totalSentimentScoreTextBlob / 20)
+        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
 
+        if avg_score_dialogflow > 0:
+            await ctx.send("Happy for you :)")
+        elif avg_score_dialogflow == 0:
+            await ctx.send("You could be much happier :)")
+        else:
+            await ctx.send("Sorry for you :(")
 client.run(TOKEN)
