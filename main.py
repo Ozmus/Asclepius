@@ -7,8 +7,14 @@ from discord.ext import commands
 
 import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
+from modules.dialogFlow import detectIntent
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
+from modules.Twitter import *
+from dynamoDB.DynamoDBService import *
+from dynamoDB.GetTableEntry import *
+from dynamoDB.InsertTableEntry import *
+
 
 #TODO baska yere cekilecek konusulduktan sonra
 commandList = {
@@ -27,11 +33,13 @@ commandList = {
 }
 
 load_dotenv()
+
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
 TOKEN = os.getenv('TOKEN')
-
+clientDynamoDB, dynamoDB = connectDynamoDB()
+createTables(clientDynamoDB, dynamoDB)
 
 @client.event
 async def on_ready():
@@ -76,12 +84,15 @@ async def getPoem(ctx):
     embed.set_author(name=r['poet']['name'], icon_url=r['poet']['photo_avatar_url'])
     await ctx.send(embed=embed)
 
+def checkIntent(ctx, intent, fulfillmentText):
+    if(intent == 'Twitter'):
+        twitter(ctx)
 
 @client.command()
 async def stopRecord(ctx):
     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await ctx.send(fullfillmentText)
-
+    checkIntent(ctx, detectedIntent, fullfillmentText)
 
 @client.command()
 async def playNatureSound(ctx):
@@ -348,5 +359,62 @@ async def getTrack(ctx, arg1):
         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
 
+@client.command()
+async def twitter(ctx):
+    isAuthorizedUser = True
+    discord_id = str(ctx.author.id)
+    try:
+        twitter_credentials = get_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id)
+        tweets = getTweetsKnownAccessToken(twitter_credentials['access_token'],
+                                           twitter_credentials['access_token_secret'],
+                                           twitter_credentials['username'])
+        totalSentimentScoreDialogFlow = 0
+        totalSentimentScoreTextBlob = 0
+        for tweet in tweets:
+            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            totalSentimentScoreDialogFlow += sentimentScore
+            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
+        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
+        if avg_score_dialogflow > 0:
+            await ctx.send("Happy for you :)")
+        elif avg_score_dialogflow == 0:
+            await ctx.send("You could be much happier :)")
+        else:
+            await ctx.send("Sorry for you :(")
+    except:
+        isAuthorizedUser = False
 
+    if not isAuthorizedUser:
+        authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
+                       f"\n → {authorizationURL}")
+
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+        msg = await client.wait_for("message", check=check)
+        authorizationPin = msg.content
+        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
+                                                                                         authTokenSecret,
+                                                                                         authorizationPin)
+        add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
+                                access_token=access_token, access_token_secret=access_token_secret)
+        tweets = getTweets(access_token, access_token_secret, screen_name)
+        totalSentimentScoreDialogFlow = 0
+        totalSentimentScoreTextBlob = 0
+        for tweet in tweets:
+            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            totalSentimentScoreDialogFlow += sentimentScore
+            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
+        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
+
+        if avg_score_dialogflow > 0:
+            await ctx.send("Happy for you :)")
+        elif avg_score_dialogflow == 0:
+            await ctx.send("You could be much happier :)")
+        else:
+            await ctx.send("Sorry for you :(")
 client.run(TOKEN)
