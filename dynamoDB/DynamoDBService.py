@@ -1,9 +1,7 @@
 import boto3
 from dotenv import load_dotenv
 import os
-from Asclepius.dynamoDB.tables.UserCredentials import UserCredentials
-from dynamoDB.tables.TwitterCredentials import *
-from dynamoDB.tables.SpotifyCredentials import *
+from dynamoDB.tables.UserCredentials import *
 
 
 load_dotenv()
