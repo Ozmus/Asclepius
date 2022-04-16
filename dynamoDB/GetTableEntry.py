@@ -2,11 +2,11 @@ from botocore.awsrequest import logger
 
 
 def get_twitter_credentials(dynamo_db, discord_id):
-    get_credentials(dynamo_db, discord_id, 'Twitter')
+    return get_credentials(dynamo_db, discord_id, 'Twitter')
 
 
 def get_spotify_credentials(dynamo_db, discord_id):
-    get_credentials(dynamo_db, discord_id, 'Spotify')
+    return get_credentials(dynamo_db, discord_id, 'Spotify')
 
 
 def get_credentials(dynamo_db, discord_id, type):
