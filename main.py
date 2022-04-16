@@ -2,6 +2,7 @@ import random
 from os import listdir
 from os.path import isfile, join
 
+import discord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
@@ -78,6 +79,27 @@ async def getQuote(ctx):
 
 
 @client.command()
+async def recipe(ctx):
+    response = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
+    r = response.json()
+    embed = discord.Embed(title=r['meals'][0]['strMeal'], color=discord.Color.random())
+    embed.add_field(name="Category", value=r['meals'][0]['strCategory'], inline=False)
+    embed.set_image(url=r['meals'][0]['strMealThumb'])
+    embed.add_field(name="Youtube Link", value=r['meals'][0]['strYoutube'], inline=False)
+    ingredients = [val for key, val in r['meals'][0].items() if "strIngredient" in key]
+    ingredients = [x for x in ingredients if len(x) != 0 or len(x) != 1]
+    measures = [val for key, val in r['meals'][0].items() if "strMeasure" in key]
+    measures = [x for x in measures if len(x) != 0 or len(x) != 1]
+    str = ""
+    for i in range(0, len(measures)):
+        str = str + measures[i] + " " + ingredients[i] + "\n"
+
+    embed.add_field(name="Ingredients", value=str, inline=False)
+    embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
+    await ctx.send(embed=embed)
+
+
+@client.command()
 async def getPoem(ctx):
     response = requests.get('https://www.poemist.com/api/v1/randompoems')
     r = response.json()
@@ -133,6 +155,7 @@ async def natureSound(ctx):
     else:
         await ctx.send("Please join a voice channel and try again :)")
 
+
 @client.command()
 async def piano(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
@@ -157,6 +180,7 @@ async def piano(ctx):
     else:
         await ctx.send("Please join a voice channel and try again :)")
 
+
 @client.command()
 async def chill(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
@@ -180,6 +204,7 @@ async def chill(ctx):
             player = voice.play(source)
     else:
         await ctx.send("Please join a voice channel and try again :)")
+
 
 @client.command()
 async def pause(ctx):
@@ -212,7 +237,7 @@ async def on_voice_state_update(member, before, after):
 async def changeSound(ctx):
     sounds = [f for f in listdir(currentSoundDirectory) if isfile(join(currentSoundDirectory, f))]
     rand = random.randint(0, len(sounds))
-    soundPath = currentSoundDirectory+"/" + sounds[rand]
+    soundPath = currentSoundDirectory + "/" + sounds[rand]
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
     if ctx.author.voice:
@@ -324,7 +349,7 @@ async def recommendation(ctx, arg1):
 async def on_member_join(member):
     print(member)
     await member.create_dm()
-    await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
+    await member.dm_channel.send(f'Hi {member.name} welcome!.')
 
 
 @client.event
@@ -341,7 +366,7 @@ async def on_message(msg):
 async def on_message(msg):
     member = msg.guild.get_member(msg.author.id)
     await member.create_dm()
-    await member.dm_channel.send(f'Hadi konuşalım {member.name}. ')
+    await member.dm_channel.send(f'Lets talk {member.name}. ')
 
 
 @client.command(name="createPlaylist")
@@ -477,4 +502,5 @@ async def twitter(ctx):
         else:
             await ctx.send("Sorry for you :(")
 
-client.run(TOKEN)
+
+client.run("OTM0NTA0NDA1NTk4ODcxNjAy.YexDDA.8YqcJJf4bMAf-njrg4ILscacE08")
