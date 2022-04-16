@@ -11,7 +11,8 @@ Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
 #loads genre list using get request from themoviedb
 def load_genre_dictionary():
     genreDict = {}
-    text = json.dumps(requests.get("https://api.themoviedb.org/3/genre/movie/list?api_key=", Movie_db_API_key, "&language=en-US").json())
+    Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
+    text = json.dumps(requests.get("https://api.themoviedb.org/3/genre/movie/list?api_key=" + Movie_db_API_key + "&language=en-US").json())
     dataset = json.loads(text)
     for i in range(len(dataset['genres'])):
         genreDict[dataset['genres'][i]['id']] = dataset['genres'][i]['name']
@@ -44,21 +45,23 @@ def get_data(Movie_db_API_key, Movie_ID):
 
 def load_popular_film_list():
     filename = 'filmList'
-    query = "https://api.themoviedb.org/3/movie/popular?api_key=" + Movie_db_API_key + "&language=en-US&page=1"
-    text = json.dumps(requests.get(query).json())
-    dataset = json.loads(text)
-    datasetResults = dataset['results']
+    Movie_db_API_key = os.getenv('TheMovieDatabaseAPIKey')
     filmList = []
-    for i in range(len(datasetResults)):
-        filmList.append({"id": datasetResults[i]['id']
-                    , "original_title": datasetResults[i]['original_title']
-                    , "genre_ids": datasetResults[i]['genre_ids']
-                    , "vote_average": datasetResults[i]['vote_average']
-                    , "overview": datasetResults[i]['overview']
-                    , "poster_path": datasetResults[i]['poster_path']
-                    , "popularity": datasetResults[i]['popularity']
-                    , "release_date": datasetResults[i]['release_date']
-                })
+    for pageNum in range(1 , 6):
+        query = "https://api.themoviedb.org/3/movie/popular?api_key=" + Movie_db_API_key + "&language=en-US&page=" + str(pageNum)
+        text = json.dumps(requests.get(query).json())
+        dataset = json.loads(text)
+        datasetResults = dataset['results']
+        for i in range(len(datasetResults)):
+            filmList.append({"id": datasetResults[i]['id']
+                        , "original_title": datasetResults[i]['original_title']
+                        , "genre_ids": datasetResults[i]['genre_ids']
+                        , "vote_average": datasetResults[i]['vote_average']
+                        , "overview": datasetResults[i]['overview']
+                        , "poster_path": datasetResults[i]['poster_path']
+                        , "popularity": datasetResults[i]['popularity']
+                        , "release_date": datasetResults[i]['release_date']
+                    })
 
     with open(filename, 'w') as film_list_file:
         film_list_file.write(json.dumps(filmList))
@@ -71,14 +74,32 @@ def read_popular_film_list():
     filmList = json.loads(films)
     return filmList
 
-def get_film():
-    load_popular_film_list()
-    filmList = read_popular_film_list()
-    film = filmList[random.randint(0, 19)]
+def embed_film(film):
     embed = discord.Embed(title=film['original_title'],
                           description=film['overview'],
                           color=discord.Color.blue())
-    embed.set_thumbnail(url='https://image.tmdb.org/t/p/original/'+ film['poster_path'])
+    embed.set_thumbnail(url='https://image.tmdb.org/t/p/original/' + film['poster_path'])
     embed.add_field(name="Release Date", value=film['release_date'], inline=True)
     embed.add_field(name="Vote Average", value=film['vote_average'], inline=True)
+    return embed
+
+def get_film(sentimentScore = 0):
+    load_popular_film_list()
+    filmList = read_popular_film_list()
+    film = filmList[random.randint(0, len(filmList))]
+    if(sentimentScore > 0):
+        positiveFilmList=[]
+        for film in filmList:
+            if(80 in film['genre_ids']):
+                positiveFilmList.append(film)
+        film = positiveFilmList[random.randint(0, len(positiveFilmList))]
+    elif(sentimentScore < 0):
+        negativeFilmList = []
+        for film in filmList:
+            if (10751 in film['genre_ids']):
+                negativeFilmList.append(film)
+        film = negativeFilmList[random.randint(0, len(negativeFilmList))]
+    else:
+        film = filmList[random.randint(0, len(filmList))]
+    embed = embed_film(film)
     return embed

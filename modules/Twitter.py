@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from textblob import TextBlob
 from dynamoDB.InsertTableEntry import *
+from modules.dialogFlow import detectIntent
 
 load_dotenv()
 CONSUMER_KEY = os.getenv('TWITTER_API_KEY')
@@ -83,11 +84,17 @@ def parseTweet(tweet):
         return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
 
 def sentimentAnalysis(tweet):
-        analysis = TextBlob(tweet)
-        return analysis.sentiment.polarity
-        # if analysis.sentiment.polarity > 0:
-        #     return 'positive'
-        # elif analysis.sentiment.polarity == 0:
-        #     return 'neutral'
-        # else:
-        #     return 'negative'
+    analysis = TextBlob(tweet)
+    return analysis.sentiment.polarity
+
+def getSentimentResult(tweets):
+    totalSentimentScoreDialogFlow = 0
+    totalSentimentScoreTextBlob = 0
+    for tweet in tweets:
+        detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+        totalSentimentScoreDialogFlow += sentimentScore
+        totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
+    avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
+    avg_score_textblob = totalSentimentScoreTextBlob / len(tweets)
+    avg_score = (avg_score_dialogflow * 0.9) + (avg_score_textblob * 0.1)
+    return avg_score

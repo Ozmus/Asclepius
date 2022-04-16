@@ -2,21 +2,22 @@ import random
 from os import listdir
 from os.path import isfile, join
 
-import youtube_dl
+import discord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
 import modules.spotipyApi as spotify
-from dynamoDB.DynamoDBService import *
-from dynamoDB.GetTableEntry import *
-from dynamoDB.InsertTableEntry import *
 from modules.TheMovieDatabase import *
-from modules.Twitter import *
 from modules.dialogFlow import detectIntent
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
+from modules.Twitter import *
+from dynamoDB.DynamoDBService import *
+from dynamoDB.GetTableEntry import *
+from dynamoDB.InsertTableEntry import *
 
-# TODO baska yere cekilecek konusulduktan sonra
+
+#TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -31,6 +32,8 @@ commandList = {
     11: {"command": "topArtists", "description": "Asclepius knows your favorite artists!"},
     12: {"command": "priTalk", "description": "Asclepius can talk with you in dm!"}
 }
+
+currentSoundDirectory = ""
 
 load_dotenv()
 
@@ -100,6 +103,30 @@ async def getQuote(ctx):
 
 
 @client.command()
+async def recipe(ctx):
+    try:
+        response = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
+        r = response.json()
+        embed = discord.Embed(title=r['meals'][0]['strMeal'], color=discord.Color.random())
+        embed.add_field(name="Category", value=r['meals'][0]['strCategory'], inline=False)
+        embed.set_image(url=r['meals'][0]['strMealThumb'])
+        embed.add_field(name="Youtube Link", value=r['meals'][0]['strYoutube'], inline=False)
+        ingredients = [val for key, val in r['meals'][0].items() if "strIngredient" in key]
+        ingredients = [x for x in ingredients if len(x) != 0 or len(x) != 1]
+        measures = [val for key, val in r['meals'][0].items() if "strMeasure" in key]
+        measures = [x for x in measures if len(x) != 0 or len(x) != 1]
+        str = ""
+        for i in range(0, len(measures)):
+            str = str + measures[i] + " " + ingredients[i] + "\n"
+
+        embed.add_field(name="Ingredients", value=str, inline=False)
+        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
+        await ctx.send(embed=embed)
+    except:
+        await ctx.send("Something went wrong. Please try again :(")
+
+
+@client.command()
 async def getPoem(ctx):
     response = requests.get('https://www.poemist.com/api/v1/randompoems')
     r = response.json()
@@ -110,33 +137,104 @@ async def getPoem(ctx):
 
 
 @client.command()
-async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
-    await ctx.send(fullfillmentText)
-    checkIntent(ctx, detectedIntent, fullfillmentText)
-
+async def playSound(ctx):
+    embed = discord.Embed(color=discord.Color.random())
+    embed.add_field(name=client.command_prefix + "natureSound", value="Plays nature sounds")
+    embed.add_field(name=client.command_prefix + "piano", value="Plays piano sounds")
+    embed.add_field(name=client.command_prefix + "chill", value="Plays chill musics")
+    embed.add_field(name=client.command_prefix + "pause", value="To pause sound")
+    embed.add_field(name=client.command_prefix + "resume", value="To resume sound")
+    embed.add_field(name=client.command_prefix + "changeSound", value="To change sound")
+    embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
+    await ctx.send(embed=embed)
 
 def checkIntent(ctx, intent, fulfillmentText):
-    if (intent == 'Twitter'):
+    if(intent == 'Twitter'):
         twitter(ctx)
+
+@client.command()
+async def stopRecord(ctx):
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    await ctx.send(fullfillmentText)
 
 
 @client.command()
-async def playNatureSound(ctx):
-    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+async def natureSound(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/natureSounds"
+    sounds = [f for f in listdir("sounds/natureSounds") if isfile(join("sounds/natureSounds", f))]
     rand = random.randint(0, len(sounds))
-    soundPath = "natureSounds/" + sounds[rand]
+    soundPath = "sounds/natureSounds/" + sounds[rand]
     if ctx.author.voice:
         channel = ctx.message.author.voice.channel
-        voice = await channel.connect()
-        source = FFmpegPCMAudio(soundPath)
-        player = voice.play(source)
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
     else:
         await ctx.send("Please join a voice channel and try again :)")
 
 
 @client.command()
-async def pauseNatureSound(ctx):
+async def piano(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/piano"
+    sounds = [f for f in listdir("sounds/piano") if isfile(join("sounds/piano", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "sounds/piano/" + sounds[rand]
+    if ctx.author.voice:
+        channel = ctx.message.author.voice.channel
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
+
+
+@client.command()
+async def chill(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/chill"
+    sounds = [f for f in listdir("sounds/chill") if isfile(join("sounds/chill", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "sounds/chill/" + sounds[rand]
+    if ctx.author.voice:
+        channel = ctx.message.author.voice.channel
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
+
+
+@client.command()
+async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_playing():
         voice.pause()
@@ -145,7 +243,7 @@ async def pauseNatureSound(ctx):
 
 
 @client.command()
-async def stopNatureSound(ctx):
+async def stop(ctx):
     voice = ctx.guild.voice_client
     voice.stop()
     await ctx.guild.voice_client.disconnect()
@@ -163,10 +261,10 @@ async def on_voice_state_update(member, before, after):
 
 
 @client.command()
-async def changeNatureSound(ctx):
-    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+async def changeSound(ctx):
+    sounds = [f for f in listdir(currentSoundDirectory) if isfile(join(currentSoundDirectory, f))]
     rand = random.randint(0, len(sounds))
-    soundPath = "natureSounds/" + sounds[rand]
+    soundPath = currentSoundDirectory + "/" + sounds[rand]
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
     if ctx.author.voice:
@@ -181,7 +279,7 @@ async def changeNatureSound(ctx):
 
 
 @client.command()
-async def resumeNatureSound(ctx):
+async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_paused():
         voice.resume()
@@ -199,6 +297,7 @@ async def breathe(ctx):
         await ctx.send(file=exerciseGif)
 
 
+# -p playlist, default video
 @client.command()
 async def youtube(ctx, *args):
     if (len(args) == 0):
@@ -207,9 +306,15 @@ async def youtube(ctx, *args):
 
     global embedListForYoutube
     global youtubeEmbedListIndex
-    youtubeEmbedListIndex = 0
-    embedListForYoutube = createEmbedListForYoutube(args[0])
-    msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
+    if (len(args) == 1):
+
+        youtubeEmbedListIndex = 0
+        embedListForYoutube = createEmbedListForYoutube(args[0], "video")
+        msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
+    elif (len(args) == 2 and args[0] == "-p"):
+        youtubeEmbedListIndex = 0
+        embedListForYoutube = createEmbedListForYoutube(args[1], "playlist")
+        msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
     await msg.add_reaction("⬅️")
     await msg.add_reaction("➡️")
 
@@ -271,8 +376,8 @@ async def recommendation(ctx, arg1):
 @client.event
 async def on_member_join(member):
     print(member)
-    # await member.create_dm()
-    # await member.dm_channel.send(f'Merhaba {member.name} hoşgeldin.')
+    await member.create_dm()
+    await member.dm_channel.send(f'Hi {member.name} welcome!.')
 
 
 @client.event
@@ -290,7 +395,7 @@ async def on_message(msg):
 async def on_message(msg):
     member = msg.guild.get_member(msg.author.id)
     await member.create_dm()
-    await member.dm_channel.send(f'Hadi konuşalım {member.name}. ')
+    await member.dm_channel.send(f'Lets talk {member.name}. ')
 
 
 @client.command(name="createPlaylist")
@@ -386,6 +491,7 @@ async def getTrack(ctx, arg1):
     for rec in spotify.getTracks(arg1).values.tolist():
         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
+
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -495,16 +601,8 @@ async def twitter(ctx):
         tweets = getTweetsKnownAccessToken(twitter_credentials['access_token'],
                                            twitter_credentials['access_token_secret'],
                                            twitter_credentials['username'])
-        totalSentimentScoreDialogFlow = 0
-        totalSentimentScoreTextBlob = 0
-        for tweet in tweets:
-            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
-            totalSentimentScoreDialogFlow += sentimentScore
-            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
-        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
-        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
-              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
-        if avg_score_dialogflow > 0:
+        sentiment_score = getSentimentResult(tweets)
+        if sentiment_score > 0:
             await ctx.send("Happy for you :)")
         elif avg_score_dialogflow == 0:
             await ctx.send("You could be much happier :)")
@@ -529,17 +627,8 @@ async def twitter(ctx):
         add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
                                 access_token=access_token, access_token_secret=access_token_secret)
         tweets = getTweets(access_token, access_token_secret, screen_name)
-        totalSentimentScoreDialogFlow = 0
-        totalSentimentScoreTextBlob = 0
-        for tweet in tweets:
-            detectedIntent, _, sentimentScore = detectIntent(parseTweet(tweet.full_text))
-            totalSentimentScoreDialogFlow += sentimentScore
-            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
-        avg_score_dialogflow = totalSentimentScoreDialogFlow / len(tweets)
-        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / len(tweets),
-              "Average TextBlob Score: ", totalSentimentScoreTextBlob / len(tweets))
-
-        if avg_score_dialogflow > 0:
+        sentiment_score = getSentimentResult(tweets)
+        if sentiment_score > 0:
             await ctx.send("Happy for you :)")
         elif avg_score_dialogflow == 0:
             await ctx.send("You could be much happier :)")

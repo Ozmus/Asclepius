@@ -1,8 +1,7 @@
 import boto3
 from dotenv import load_dotenv
 import os
-from dynamoDB.tables.TwitterCredentials import *
-from dynamoDB.tables.SpotifyCredentials import *
+from dynamoDB.tables.UserCredentials import *
 
 
 load_dotenv()
@@ -29,12 +28,12 @@ def connectDynamoDB():
 
 def createTables(client, dynamodb):
     existing_tables = client.list_tables()['TableNames']
+    user_credentials = UserCredentials(dynamodb)
     if 'TwitterCredentials' not in existing_tables:
-        twitter_credentials = TwitterCredentials(dynamodb)
-        twitter_credentials.create_table('TwitterCredentials')
+        user_credentials.create_table('TwitterCredentials')
     if 'SpotifyCredentials' not in existing_tables:
-        spotify_credentials = SpotifyCredentials(dynamodb)
-        spotify_credentials.create_table('SpotifyCredentials')
+        spotify_credentials = UserCredentials(dynamodb)
+        user_credentials.create_table('SpotifyCredentials')
 
 
 # to add new entry to spotify
