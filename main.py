@@ -7,11 +7,16 @@ from discord.ext import commands
 
 import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
+from modules.dialogFlow import detectIntent
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.Twitter import *
+from dynamoDB.DynamoDBService import *
+from dynamoDB.GetTableEntry import *
+from dynamoDB.InsertTableEntry import *
 
-# TODO baska yere cekilecek konusulduktan sonra
+
+#TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -35,7 +40,8 @@ ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
 
 TOKEN = os.getenv('TOKEN')
-
+clientDynamoDB, dynamoDB = connectDynamoDB()
+createTables(clientDynamoDB, dynamoDB)
 
 @client.event
 async def on_ready():
@@ -93,6 +99,9 @@ async def playSound(ctx):
     embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
     await ctx.send(embed=embed)
 
+def checkIntent(ctx, intent, fulfillmentText):
+    if(intent == 'Twitter'):
+        twitter(ctx)
 
 @client.command()
 async def stopRecord(ctx):
@@ -432,17 +441,40 @@ async def getTrack(ctx, arg1):
 
 @client.command()
 async def twitter(ctx):
-    authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-    await ctx.send(
-        f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+    isAuthorizedUser = True
+    discord_id = str(ctx.author.id)
+    try:
+        twitter_credentials = get_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id)
+        tweets = getTweetsKnownAccessToken(twitter_credentials['access_token'],
+                                           twitter_credentials['access_token_secret'],
+                                           twitter_credentials['username'])
+        sentiment_score = getSentimentResult(tweets)
+        if sentiment_score > 0:
+            await ctx.send("Happy for you :)")
+        else:
+            await ctx.send("Sorry for you :(")
+    except:
+        isAuthorizedUser = False
 
-    def check(msg):
-        return msg.author == ctx.author and msg.channel == ctx.channel
+    if not isAuthorizedUser:
+        authToken, authTokenSecret, authorizationURL = authorizationTwitter()
+        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
+                       f"\n → {authorizationURL}")
 
-    msg = await client.wait_for("message", check=check)
-    authorizationPin = msg.content
-    tweets = getTweets(authToken, authTokenSecret, authorizationPin)
-    for tweet in tweets:
-        print(parseTweet(tweet.full_text))
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+        msg = await client.wait_for("message", check=check)
+        authorizationPin = msg.content
+        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
+                                                                                         authTokenSecret,
+                                                                                         authorizationPin)
+        add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
+                                access_token=access_token, access_token_secret=access_token_secret)
+        tweets = getTweets(access_token, access_token_secret, screen_name)
+        sentiment_score = getSentimentResult(tweets)
+        if sentiment_score > 0:
+            await ctx.send("Happy for you :)")
+        else:
+            await ctx.send("Sorry for you :(")
 
 client.run(TOKEN)
