@@ -11,7 +11,7 @@ from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.Twitter import *
 
-#TODO baska yere cekilecek konusulduktan sonra
+# TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
     2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
@@ -26,6 +26,8 @@ commandList = {
     11: {"command": "topArtists", "description": "Asclepius knows your favorite artists!"},
     12: {"command": "priTalk", "description": "Asclepius can talk with you in dm!"}
 }
+
+currentSoundDirectory = ""
 
 load_dotenv()
 
@@ -80,27 +82,98 @@ async def getPoem(ctx):
 
 
 @client.command()
+async def playSound(ctx):
+    embed = discord.Embed(color=discord.Color.random())
+    embed.add_field(name=client.command_prefix + "natureSound", value="Plays nature sounds")
+    embed.add_field(name=client.command_prefix + "piano", value="Plays piano sounds")
+    embed.add_field(name=client.command_prefix + "chill", value="Plays chill musics")
+    embed.add_field(name=client.command_prefix + "pause", value="To pause sound")
+    embed.add_field(name=client.command_prefix + "resume", value="To resume sound")
+    embed.add_field(name=client.command_prefix + "changeSound", value="To change sound")
+    embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
+    await ctx.send(embed=embed)
+
+
+@client.command()
 async def stopRecord(ctx):
     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await ctx.send(fullfillmentText)
 
 
 @client.command()
-async def playNatureSound(ctx):
-    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+async def natureSound(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/natureSounds"
+    sounds = [f for f in listdir("sounds/natureSounds") if isfile(join("sounds/natureSounds", f))]
     rand = random.randint(0, len(sounds))
-    soundPath = "natureSounds/" + sounds[rand]
+    soundPath = "sounds/natureSounds/" + sounds[rand]
     if ctx.author.voice:
         channel = ctx.message.author.voice.channel
-        voice = await channel.connect()
-        source = FFmpegPCMAudio(soundPath)
-        player = voice.play(source)
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
     else:
         await ctx.send("Please join a voice channel and try again :)")
 
+@client.command()
+async def piano(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/piano"
+    sounds = [f for f in listdir("sounds/piano") if isfile(join("sounds/piano", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "sounds/piano/" + sounds[rand]
+    if ctx.author.voice:
+        channel = ctx.message.author.voice.channel
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
 
 @client.command()
-async def pauseNatureSound(ctx):
+async def chill(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    global currentSoundDirectory
+    currentSoundDirectory = "sounds/chill"
+    sounds = [f for f in listdir("sounds/chill") if isfile(join("sounds/chill", f))]
+    rand = random.randint(0, len(sounds))
+    soundPath = "sounds/chill/" + sounds[rand]
+    if ctx.author.voice:
+        channel = ctx.message.author.voice.channel
+        if voice_client is not None:
+            if voice_client.is_connected() == True:
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                if voice.is_playing() or voice.is_paused():
+                    voice.stop()
+                    source = FFmpegPCMAudio(soundPath)
+                    player = voice.play(source)
+        else:
+            voice = await channel.connect()
+            source = FFmpegPCMAudio(soundPath)
+            player = voice.play(source)
+    else:
+        await ctx.send("Please join a voice channel and try again :)")
+
+@client.command()
+async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_playing():
         voice.pause()
@@ -109,7 +182,7 @@ async def pauseNatureSound(ctx):
 
 
 @client.command()
-async def stopNatureSound(ctx):
+async def stop(ctx):
     voice = ctx.guild.voice_client
     voice.stop()
     await ctx.guild.voice_client.disconnect()
@@ -127,10 +200,10 @@ async def on_voice_state_update(member, before, after):
 
 
 @client.command()
-async def changeNatureSound(ctx):
-    sounds = [f for f in listdir("natureSounds") if isfile(join("natureSounds", f))]
+async def changeSound(ctx):
+    sounds = [f for f in listdir(currentSoundDirectory) if isfile(join(currentSoundDirectory, f))]
     rand = random.randint(0, len(sounds))
-    soundPath = "natureSounds/" + sounds[rand]
+    soundPath = currentSoundDirectory+"/" + sounds[rand]
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
     if ctx.author.voice:
@@ -145,7 +218,7 @@ async def changeNatureSound(ctx):
 
 
 @client.command()
-async def resumeNatureSound(ctx):
+async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_paused():
         voice.resume()
@@ -172,7 +245,7 @@ async def youtube(ctx, *args):
     global embedListForYoutube
     global youtubeEmbedListIndex
     if (len(args) == 1):
-       
+
         youtubeEmbedListIndex = 0
         embedListForYoutube = createEmbedListForYoutube(args[0], "video")
         msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
@@ -356,13 +429,16 @@ async def getTrack(ctx, arg1):
         embed.add_field(name=rec[1], value=rec[2] + ": " + rec[3], inline=False)
     await ctx.send(embed=embed)
 
+
 @client.command()
 async def twitter(ctx):
     authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-    await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+    await ctx.send(
+        f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
 
     def check(msg):
         return msg.author == ctx.author and msg.channel == ctx.channel
+
     msg = await client.wait_for("message", check=check)
     authorizationPin = msg.content
     tweets = getTweets(authToken, authTokenSecret, authorizationPin)
