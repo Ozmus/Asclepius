@@ -11,9 +11,9 @@ from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.Twitter import *
 from dynamoDB.DynamoDBService import *
-from dynamoDB.GetTableEntry import  *
-from dynamoDB.InsertTableEntry import  *
-from dynamoDB.DeleteTableEntry import  *
+from dynamoDB.GetTableEntry import *
+from dynamoDB.InsertTableEntry import *
+
 
 #TODO baska yere cekilecek konusulduktan sonra
 commandList = {
