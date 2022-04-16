@@ -80,23 +80,26 @@ async def getQuote(ctx):
 
 @client.command()
 async def recipe(ctx):
-    response = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
-    r = response.json()
-    embed = discord.Embed(title=r['meals'][0]['strMeal'], color=discord.Color.random())
-    embed.add_field(name="Category", value=r['meals'][0]['strCategory'], inline=False)
-    embed.set_image(url=r['meals'][0]['strMealThumb'])
-    embed.add_field(name="Youtube Link", value=r['meals'][0]['strYoutube'], inline=False)
-    ingredients = [val for key, val in r['meals'][0].items() if "strIngredient" in key]
-    ingredients = [x for x in ingredients if len(x) != 0 or len(x) != 1]
-    measures = [val for key, val in r['meals'][0].items() if "strMeasure" in key]
-    measures = [x for x in measures if len(x) != 0 or len(x) != 1]
-    str = ""
-    for i in range(0, len(measures)):
-        str = str + measures[i] + " " + ingredients[i] + "\n"
+    try:
+        response = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
+        r = response.json()
+        embed = discord.Embed(title=r['meals'][0]['strMeal'], color=discord.Color.random())
+        embed.add_field(name="Category", value=r['meals'][0]['strCategory'], inline=False)
+        embed.set_image(url=r['meals'][0]['strMealThumb'])
+        embed.add_field(name="Youtube Link", value=r['meals'][0]['strYoutube'], inline=False)
+        ingredients = [val for key, val in r['meals'][0].items() if "strIngredient" in key]
+        ingredients = [x for x in ingredients if len(x) != 0 or len(x) != 1]
+        measures = [val for key, val in r['meals'][0].items() if "strMeasure" in key]
+        measures = [x for x in measures if len(x) != 0 or len(x) != 1]
+        str = ""
+        for i in range(0, len(measures)):
+            str = str + measures[i] + " " + ingredients[i] + "\n"
 
-    embed.add_field(name="Ingredients", value=str, inline=False)
-    embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
-    await ctx.send(embed=embed)
+        embed.add_field(name="Ingredients", value=str, inline=False)
+        embed.add_field(name="Instructions", value="``For instructions, visit: `` " + r['meals'][0]['strSource'], inline=False)
+        await ctx.send(embed=embed)
+    except:
+        await ctx.send("Something went wrong. Please try again :(")
 
 
 @client.command()
@@ -503,4 +506,4 @@ async def twitter(ctx):
             await ctx.send("Sorry for you :(")
 
 
-client.run("OTM0NTA0NDA1NTk4ODcxNjAy.YexDDA.8YqcJJf4bMAf-njrg4ILscacE08")
+client.run(TOKEN)
