@@ -7,6 +7,7 @@ from discord.ext import commands
 
 # import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
+from modules.dialogFlow import detectIntent
 from modules.speechToText import stopSoundRecord
 from modules.youtube import *
 from modules.Twitter import *
@@ -364,24 +365,41 @@ async def twitter(ctx):
         tweets = getTweetsKnownAccessToken(twitter_credentials['access_token'],
                                            twitter_credentials['access_token_secret'],
                                            twitter_credentials['username'])
+        totalSentimentScoreDialogFlow = 0
+        totalSentimentScoreTextBlob = 0
         for tweet in tweets:
             print(parseTweet(tweet.full_text))
+            detectedIntent, fullfillmentText, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            totalSentimentScoreDialogFlow += sentimentScore
+            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / 20,
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / 20)
     except:
         isAuthorizedUser = False
 
     if not isAuthorizedUser:
         authToken, authTokenSecret, authorizationURL = authorizationTwitter()
-        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. \n → {authorizationURL}")
+        await ctx.send(f"Click the following URL and paste the PIN to authorize your Twitter account. "
+                       f"\n → {authorizationURL}")
 
         def check(msg):
             return msg.author == ctx.author and msg.channel == ctx.channel
         msg = await client.wait_for("message", check=check)
         authorizationPin = msg.content
-        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken, authTokenSecret, authorizationPin)
+        access_token, access_token_secret, user_id, screen_name = get_user_access_tokens(authToken,
+                                                                                         authTokenSecret,
+                                                                                         authorizationPin)
         add_twitter_credentials(dynamo_db=dynamoDB, discord_id=discord_id, username=screen_name, user_id=user_id,
                                 access_token=access_token, access_token_secret=access_token_secret)
         tweets = getTweets(access_token, access_token_secret, screen_name)
+        totalSentimentScoreDialogFlow = 0
+        totalSentimentScoreTextBlob = 0
         for tweet in tweets:
             print(parseTweet(tweet.full_text))
+            detectedIntent, fullfillmentText, sentimentScore = detectIntent(parseTweet(tweet.full_text))
+            totalSentimentScoreDialogFlow += sentimentScore
+            totalSentimentScoreTextBlob += sentimentAnalysis(parseTweet(tweet.full_text))
+        print("Average Dialog Flow Score: ", totalSentimentScoreDialogFlow / 20,
+              "Average TextBlob Score: ", totalSentimentScoreTextBlob / 20)
 
 client.run(TOKEN)
