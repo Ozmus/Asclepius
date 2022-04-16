@@ -2,7 +2,7 @@ from botocore.awsrequest import logger
 from botocore.exceptions import ClientError
 
 
-class SpotifyCredentials:
+class UserCredentials:
     def __init__(self, dyn_resource):
         self.dyn_resource = dyn_resource
         self.table = None
