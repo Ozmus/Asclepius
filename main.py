@@ -161,6 +161,16 @@ async def checkIntent(ctx, intent, fulfillmentText):
     if (intent == 'Twitter'):
         await twitter(ctx)
 
+@client.event
+async def on_guild_join(guild):
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+            embed = discord.Embed()
+            embed.set_image(url="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Aesculap_147-.png/170px-Aesculap_147-.png")
+            embed.add_field(name="HEY!",value="`I'm Asclepius. I'm here to help you.` \n To list commands, you can write >help \n Also, we have voice bot to record your voice, if you don't want to write. This is the invite link: \n || https://discord.com/api/oauth2/authorize?client_id=964912868036329543&permissions=120325187904&scope=bot ||")
+            await channel.send(embed=embed)
+        break
+
 
 @client.command()
 async def stopRecord(ctx):
