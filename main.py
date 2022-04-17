@@ -20,14 +20,14 @@ from dynamoDB.InsertTableEntry import *
 
 spotifyCommandList = {
     1: {"command": "***>newReleases***", "description": "You can list the new releases of this week!"},
-    2: {"command": "***>createPlaylist***", "description": "Asclepius can create a playlist  on spotify for you."},
+    2: {"command": "***>createPlaylist {theme} ***", "description": "Asclepius can create a playlist on spotify for you. Just give it a theme."},
     3: {"command": "***>getMyPlaylists***", "description": "Asclepius can get your playlist."},
-    4: {"command": "***>recommendMe***", "description": "Asclepius' recommendations for you."},
-    5: {"command": "***>saveShow***", "description": "Asclepius can save shows for you."},
-    6: {"command": "***>saveEp***", "description": "Asclepius can save episodes for you."},
-    7: {"command": "***>getSong***", "description": "Asclepius can play the song for you."},
-    8: {"command": "***>getAlbum***", "description": "Asclepius can play the album for you."},
-    9: {"command": "***>showPlaylist***", "description": "Asclepius can show the tracks in the playlist for you."},
+    4: {"command": "***>recommendMe {theme} ***", "description": "Asclepius' recommendations for you. Just give it a theme."},
+    5: {"command": "***>saveShow {show name}***", "description": "Asclepius can save shows for you."},
+    6: {"command": "***>saveEp{episode name}***", "description": "Asclepius can save episodes for you."},
+    7: {"command": "***>getSong{song name}***", "description": "Asclepius can play the song for you."},
+    8: {"command": "***>getAlbum{album name}***", "description": "Asclepius can play the album for you."},
+    9: {"command": "***>showPlaylist{playlist name}***", "description": "Asclepius can show the tracks in the playlist for you."},
     10: {"command": "***>topTracks***", "description": "Asclepius knows your favorite tracks!"},
     11: {"command": "***>topArtists***", "description": "Asclepius knows your favorite artists!"},
     12: {"command": ">***priTalk***", "description": "Asclepius can talk with you in dm!"},
@@ -467,7 +467,7 @@ async def on_message(msg):
 
 
 @client.command(name="createPlaylist")
-async def createPlaylist(ctx, arg1="happy"):
+async def createPlaylist(ctx, *, arg1="happy"):
     embed = discord.Embed(title="NEW PLAYLIST",
                           description="ENJOY! -> " + spotify.createPlaylistForUser(arg1),
                           color=discord.Color.dark_gold())
@@ -476,7 +476,7 @@ async def createPlaylist(ctx, arg1="happy"):
 
 
 @client.command(name="showPlaylist")
-async def getPlaylist(ctx, arg1):
+async def getPlaylist(ctx, *, arg1):
     embed = discord.Embed(title="Current Tracks in Playlist",
                           color=discord.Color.dark_green())
 
@@ -487,7 +487,7 @@ async def getPlaylist(ctx, arg1):
 
 
 @client.command(name="getAlbum")
-async def getAlbumTracks(ctx, arg1):
+async def getAlbumTracks(ctx, *, arg1):
     embed = discord.Embed(title="Current Tracks in Album",
                           color=discord.Color.dark_magenta())
 
@@ -531,7 +531,7 @@ async def getTopTracks(ctx):
 
 
 @client.command(name="saveShow")
-async def saveShow(ctx, arg1):
+async def saveShow(ctx, *, arg1):
     embed = discord.Embed(title="Asclepius saved the show for you.", description="Here's the available episodes.",
                           color=discord.Color.dark_teal())
 
@@ -542,7 +542,7 @@ async def saveShow(ctx, arg1):
 
 
 @client.command(name="saveEp")
-async def saveEpisode(ctx, arg1):
+async def saveEpisode(ctx, *, arg1):
     ep = spotify.saveEpisodesForUser(arg1)
     embed = discord.Embed(title="Asclepius saved the episode for you.",
                           description=ep.iat[0, 1] + " (>‿◠)✌" + ep.iat[0, 2],
@@ -552,7 +552,7 @@ async def saveEpisode(ctx, arg1):
 
 
 @client.command(name="getSong")
-async def getTrack(ctx, arg1):
+async def getTrack(ctx, *, arg1):
     embed = discord.Embed(title="Here's the song!",
                           color=discord.Color.blurple())
 
