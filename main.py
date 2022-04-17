@@ -275,7 +275,7 @@ async def on_voice_state_update(member, before, after):
 
 @client.command()
 async def changeSound(ctx):
-    sounds = [f for f in listdir(currentSoundDirectory) if isfile(join(currentSoundDirectory, f))]
+    sounds = [f for f in listdir(currentSoundDirectory)]
     rand = random.randint(0, len(sounds))
     soundPath = currentSoundDirectory + "/" + sounds[rand]
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
