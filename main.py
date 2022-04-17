@@ -429,6 +429,7 @@ async def newReleases(ctx):
 
 @client.command(name="recommendMe")
 async def recommendation(ctx, *, arg1):
+    print(arg1)
     embed = discord.Embed(title="New Releases",
                           description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
                           color=discord.Color.dark_gold())
