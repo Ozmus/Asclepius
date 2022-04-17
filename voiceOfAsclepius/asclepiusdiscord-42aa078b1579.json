@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "asclepiusdiscord",
+  "private_key_id": "42aa078b15799df662f4574abad694f34c43794e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDSjuV2HLjRpOAQ\nBuophxc+7qiXgohbVmUy44xMlq//LtDipPeD8wKSCIdmlgEbuzmnqb3L2XLAUXaX\nmzsM4ZLqnhsTzf+CzXfQVGPfXcU9TwvHcfG0hFajV7BsGEtH20EK1zek+5xJA/M7\nSUr7bmnM6uRkFbctxU8r91fAI+P+rg6mLjz7sovXIZz8YpglT46D8XFnNptgpKK/\nfbSbPg2G5bdQ3kdhboKO+7nAbRGdAarlDAP4/a2/oTOlajFDea/JcLvgpu6jTp94\nJ0RmpkT6VD6XusFAV+xHLI+2v3rzLNNqDjc6PUxEeYk7sX7ONtTdkRWJzFjjG7+r\n9DOHHwoXAgMBAAECggEAZ/AQBzjwZtSLon23U56S9AbdhET0SJoiRHedByWPZVlX\n1bl3UVRBHZNGO3aqv2SxdjlNLnZ9tb/A2d/Py3ECk/xOA325tnj0vwsZbeac+cGu\nX9q4ZNK67dDYjtODPcpWliJdHnzxzf08MTTh5bHAWl5NNbaegOKYTWzAjWFqJ4oh\nCqmpNqeIMjbjMLkDm1t/MUwOdgBAeBCr0M8bWwLc4yuebWI8qNQK1sed9W02+uWw\nASjELuM74H/MVuKlCZ3qERFDWHKyNCiJPByfG7peJktFxxiktEdC4zwea9XpOvjQ\nwtKzoIyktkQ3F7Oma7riEq9/AAoYSpEguIXnVQsCIQKBgQDptt2UgaBiHs6F1U+p\nfLvZxZpLaRmLrluZz0H2BPeIzfZS+HzIPNNPovJ0N/nNjkGm9HboXd2dUQerXxVn\n0Pq2AGgxBXG8nBqkKW8FdZIrnWabEZOOIcemUQu+kyk+L4zuAD7AWeaXVNxC3bAg\n9f664pXq9f84mc/MWLJxKIsA5wKBgQDmosXkp3yg3PpVL/Nxac8C2TQqgreiU1dy\nH/Naa7dux2Fwsp4koZsFAMv+bLSH3W4A9SyGNRrd+L46JGxaYB82cKwEmmoG1srJ\n0jTkk/3jP05KQJW3kDKKQ6deKyAh3jyAIpaCbXfwrm8TI0aM/Qt29L2y9QewaYIM\n/5fzdJkXUQKBgQCCYNEbl3SxSB5N6sGV+0+QHPwGNYtasNnI5CYX6I1uc/eGMbjq\nu4PmWTCIRPHGCiX1zUrINhT7PcjZgSGf2KUEAxYcwrzASxVRnwugMAZq7lPfDd8S\n2yVVUsEKf23ykvQ7kUdwZraMlXqKksE+ofyIpP6dJL5MBQI3LQPevI9O4QKBgQDG\nuyVYFHXQSvkt5EaZyDmHU8+efcpsBfJItX1EwaJqw0SUDmU0XUgtdHVSgyrAE64R\nBzHZZvMCp66KfQ4chcz/ZPDkeoW35OcSJp5LA7Z2VPtKAgLADHFwMEGMZA6pAE0T\ngDo+osMB0dyGGhRVsklptBOtm3OHsDJOrwKo1iSAMQKBgQCGaSWi1hkdXTRFIm9V\nTaHk3lLcL2XzQmlunIAJKDYUEnSJNiuFJHkpWHuSl5FcDOmkML7xJ7ZxxGsgSAe6\nLoDrYKB/qDlkk8zVFVyLoxkGiw/pAZySYXucMcPUR3WpnNHUOdTHlFaIuwmgbM2U\neXCzAXm54okgLZZ1uEae1RSTLQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "asclepiusdiscord@asclepiusdiscord.iam.gserviceaccount.com",
+  "client_id": "101429594248112295600",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/asclepiusdiscord%40asclepiusdiscord.iam.gserviceaccount.com"
+}

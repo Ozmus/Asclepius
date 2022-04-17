@@ -1,13 +1,14 @@
 import os
+
 import gspread
 import pandas
 import spotipy
+from dotenv import load_dotenv
 from spotipy import SpotifyOAuth
 
-# Client info
+load_dotenv()
 CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
-REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 
 gc = gspread.service_account(filename='asclepius-spotify-data.json')
 
@@ -33,8 +34,8 @@ def getUserTopArtist():
 def getUserTopTracks():
     SCOPE = 'user-top-read'
     spotifyInfo = getSpotifyInfo(SCOPE)
-
     artists = spotifyInfo.current_user_top_tracks(limit=10, offset=0, time_range='short_term')
+
     results = []
 
     for item in artists['items']:
@@ -190,7 +191,7 @@ def getUserPlaylists():
     SCOPE = 'playlist-read-private playlist-read-collaborative'
     spotifyInfo = getSpotifyInfo(SCOPE)
 
-    playlists = spotifyInfo.user_playlists(limit=5, offset=0)['items']
+    playlists = spotifyInfo.current_user_playlists(limit=5, offset=0)['items']
     results = []
 
     for item in playlists:
@@ -429,8 +430,8 @@ def openWorksheet(sheetName):
 def getSpotifyInfo(SCOPE):
     if SCOPE is None:
         return spotipy.Spotify(
-            auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI))
+            auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri="http://127.0.0.1:5000/"))
 
     return spotipy.Spotify(
-        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI,
+        auth_manager=SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri="http://127.0.0.1:5000/",
                                   scope=SCOPE))
