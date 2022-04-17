@@ -21,14 +21,17 @@ from dynamoDB.InsertTableEntry import *
 
 spotifyCommandList = {
     1: {"command": "***>newReleases***", "description": "You can list the new releases of this week!"},
-    2: {"command": "***>createPlaylist {theme} ***", "description": "Asclepius can create a playlist on spotify for you. Just give it a theme."},
+    2: {"command": "***>createPlaylist {theme} ***",
+        "description": "Asclepius can create a playlist on spotify for you. Just give it a theme."},
     3: {"command": "***>getMyPlaylists***", "description": "Asclepius can get your playlist."},
-    4: {"command": "***>recommendMe {theme} ***", "description": "Asclepius' recommendations for you. Just give it a theme."},
+    4: {"command": "***>recommendMe {theme} ***",
+        "description": "Asclepius' recommendations for you. Just give it a theme."},
     5: {"command": "***>saveShow {show name}***", "description": "Asclepius can save shows for you."},
     6: {"command": "***>saveEp{episode name}***", "description": "Asclepius can save episodes for you."},
     7: {"command": "***>getSong{song name}***", "description": "Asclepius can play the song for you."},
     8: {"command": "***>getAlbum{album name}***", "description": "Asclepius can play the album for you."},
-    9: {"command": "***>showPlaylist{playlist name}***", "description": "Asclepius can show the tracks in the playlist for you."},
+    9: {"command": "***>showPlaylist{playlist name}***",
+        "description": "Asclepius can show the tracks in the playlist for you."},
     10: {"command": "***>topTracks***", "description": "Asclepius knows your favorite tracks!"},
     11: {"command": "***>topArtists***", "description": "Asclepius knows your favorite artists!"},
     12: {"command": ">***priTalk***", "description": "Asclepius can talk with you in dm!"},
@@ -45,19 +48,18 @@ spotifyCommandList = {
     18: {"command": "***recommend-Voice Of Asclepius***",
          "description": "You can call voice of asclepius and say: \n- recommend me something happy\n- recommend me something energetic\n- recommend me something fun"},
     19: {"command": "***recommend Sad-Voice Of Asclepius***",
-         "description": "You can call voice of asclepius and say: \n- dark songs\n- sad songs\n- recommendme dark songs\n- recommend me sad songs"},
-    20: {"command": ">***randomFact***", "description": "Asclepius gives a random fact"},
-    21: {"command": ">***imbored***", "description": "Asclepius give a suggestion if you are bored"},
-    22: {"command": ">***randomAdvice***", "description": "Asclepius can give an advice"},
-    23: {"command": ">***trivia***", "description": "Asclepius can ask a question with hidden answer!"},
+         "description": "You can call voice of asclepius and say: \n- dark songs\n- sad songs\n- recommendme dark songs\n- recommend me sad songs"}
 }
 
 # TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "***>spotifyCommands***", "description": "Asclepius can list the spotify commands."},
-    2: {"command": "***>youtube searchTerm***", "description": "Asclepius can suggest a video from youtube about searchTerm."},
-    3: {"command": "***>youtube -p searchTerm***", "description": "Asclepius can suggest a playlist from youtube about searchTerm."},
-    4: {"command": "***>twitter***", "description": "Asclepius can look up your tweets to make a perfect movie and video suggestion for you."},
+    2: {"command": "***>youtube searchTerm***",
+        "description": "Asclepius can suggest a video from youtube about searchTerm."},
+    3: {"command": "***>youtube -p searchTerm***",
+        "description": "Asclepius can suggest a playlist from youtube about searchTerm."},
+    4: {"command": "***>twitter***",
+        "description": "Asclepius can look up your tweets to make a perfect movie and video suggestion for you."},
     5: {"command": "***>movie***", "description": "Asclepius can suggest a movie for you."},
     6: {"command": "***>getPoem***", "description": "Asclepius can read a poem for you."},
     7: {"command": "***>makeJoke***", "description": "Asclepius can make a funny joke for you."},
@@ -67,7 +69,11 @@ commandList = {
     11: {"command": "***>record***", "description": "Asclepius starts listening your voice (works in Server)."},
     12: {"command": "***>stopRecord***", "description": "Asclepius finishes listening your voice (works in Server)."},
     13: {"command": "***>mindfulness***", "description": "Asclepius can show you a mindfulness exercise."},
-    14: {"command": "***>breathe***", "description": "Asclepius shows you a breathe exercise with a gif"}
+    14: {"command": "***>breathe***", "description": "Asclepius shows you a breathe exercise with a gif"},
+    15: {"command": ">***randomFact***", "description": "Asclepius gives a random fact"},
+    16: {"command": ">***imbored***", "description": "Asclepius give a suggestion if you are bored"},
+    17: {"command": ">***randomAdvice***", "description": "Asclepius can give an advice"},
+    18: {"command": ">***trivia***", "description": "Asclepius can ask a question with hidden answer!"},
 }
 
 currentSoundDirectory = ""
@@ -119,13 +125,15 @@ async def makeJoke(ctx):
     embed = discord.Embed(description=data[rand]['body'])
     await ctx.send(embed=embed)
 
+
 @client.command()
 async def mindfulness(ctx):
     f = open("mindfulness/jsonformatter.json")
     data = json.load(f)
     rand = random.randint(0, len(data))
-    embed = discord.Embed(title="***"+ data[rand]['title']+"***", description="`"+ data[rand]['instr']+"`")
+    embed = discord.Embed(title="***" + data[rand]['title'] + "***", description="`" + data[rand]['instr'] + "`")
     await ctx.send(embed=embed)
+
 
 @client.command()
 async def movie(ctx):
@@ -199,10 +207,12 @@ async def on_guild_join(guild):
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed()
-            embed.set_image(url="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Aesculap_147-.png/170px-Aesculap_147-.png")
-            embed.add_field(name=">twitter",value="`I'm Asclepius. I'm here to help you.` \n To list commands, you can write >help \n "
-                                              "Also, we have voice bot to record your voice, if you don't want to write. This is the invite link: \n "
-                                              "|| https://discord.com/api/oauth2/authorize?client_id=964912868036329543&permissions=120325187904&scope=bot ||")
+            embed.set_image(
+                url="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Aesculap_147-.png/170px-Aesculap_147-.png")
+            embed.add_field(name=">twitter",
+                            value="`I'm Asclepius. I'm here to help you.` \n To list commands, you can write >help \n "
+                                  "Also, we have voice bot to record your voice, if you don't want to write. This is the invite link: \n "
+                                  "|| https://discord.com/api/oauth2/authorize?client_id=964912868036329543&permissions=120325187904&scope=bot ||")
             await channel.send(embed=embed)
             ctx = await client.get_context(guild)
             await help(ctx)
@@ -221,26 +231,34 @@ async def randomFact(ctx):
     x = randfacts.get_fact()
     await ctx.send(x)
 
+
 @client.command()
 async def randomAdvice(ctx):
     response = requests.get('https://api.adviceslip.com/advice')
     r = response.json()
-    embed = discord.Embed(title=":sweat_smile: :thinking: :smile:", description="***"+r['slip']['advice']+"***", color=discord.Color.random())
+    embed = discord.Embed(title=":sweat_smile: :thinking: :smile:", description="***" + r['slip']['advice'] + "***",
+                          color=discord.Color.random())
     await ctx.send(embed=embed)
+
 
 @client.command()
 async def imbored(ctx):
     response = requests.get('https://www.boredapi.com/api/activity/')
     r = response.json()
-    embed = discord.Embed(title="Are you BORED?! :zany_face:", description="```"+r['activity']+"```", color=discord.Color.random())
+    embed = discord.Embed(title="Are you BORED?! :zany_face:", description="```" + r['activity'] + "```",
+                          color=discord.Color.random())
     await ctx.send(embed=embed)
+
 
 @client.command()
 async def trivia(ctx):
     response = requests.get('https://opentdb.com/api.php?amount=1')
     r = response.json()
-    embed = discord.Embed(title=" :thinking_face: ***" +r['results'][0]['question']+ "***", description=" *** The answer is ||"+r['results'][0]['correct_answer']+"|| ***", color=discord.Color.random())
+    embed = discord.Embed(title=" :thinking_face: ***" + r['results'][0]['question'] + "***",
+                          description=" *** The answer is ||" + r['results'][0]['correct_answer'] + "|| ***",
+                          color=discord.Color.random())
     await ctx.send(embed=embed)
+
 
 async def checkIntent(ctx, intent, fullfillmentText):
     await ctx.send(fullfillmentText)
@@ -262,6 +280,9 @@ async def checkIntent(ctx, intent, fullfillmentText):
         await twitter(ctx)
     elif intent == 'Youtube':
         await youtubeCommandInfo(ctx)
+    elif intent == 'Bad Feelings':
+        await ctx.send('You can use these command to feel better.')
+        await help(ctx)
 
 
 @client.command()
@@ -386,6 +407,7 @@ async def breathe(ctx):
         exerciseGif = discord.File(gif)
         await ctx.send(file=exerciseGif)
 
+
 # -p playlist, default video
 @client.command()
 async def youtube(ctx, *args):
@@ -425,6 +447,7 @@ async def on_reaction_add(reaction, user):
             for reaction in reaction.message.reactions:
                 await reaction.remove(user)
 
+
 @client.command()
 async def help(ctx):
     embed = discord.Embed(title="Commands",
@@ -460,7 +483,7 @@ async def newReleases(ctx):
 
 
 @client.command(name="recommendMe")
-async def recommendation(ctx, arg1):
+async def recommendation(ctx, *, arg1):
     embed = discord.Embed(title="New Releases",
                           description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
                           color=discord.Color.dark_gold())
@@ -473,7 +496,6 @@ async def recommendation(ctx, arg1):
 
 @client.event
 async def on_member_join(member):
-    print(member)
     await member.create_dm()
     await member.dm_channel.send(f'Hi {member.name} welcome!.')
 
@@ -638,7 +660,8 @@ async def join(ctx):
         else:
             voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
             voice.stop()
-            print("is voice playing",voice.is_playing())
+            print("is voice playing", voice.is_playing())
+
 
 @client.command(name='leave')
 async def leave(ctx):
