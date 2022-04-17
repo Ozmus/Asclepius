@@ -1,4 +1,5 @@
 import random
+import time
 from os import listdir
 from os.path import isfile, join
 
@@ -265,6 +266,7 @@ async def chill(ctx):
 @client.command()
 async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    print("Music is paused")
     if voice.is_playing():
         voice.pause()
     else:
@@ -292,6 +294,7 @@ async def on_voice_state_update(member, before, after):
 @client.command()
 async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    print("Music is resumed")
     if voice.is_paused():
         voice.resume()
     else:
@@ -510,6 +513,7 @@ async def play(ctx, url):
         server = ctx.message.guild
         voice_channel = server.voice_client
         song_info = ytdl.extract_info(url, download=False)
+        time.sleep(4)
         voice_channel.play(discord.FFmpegPCMAudio(song_info["formats"][0]["url"]))
         voice_channel.source = discord.PCMVolumeTransformer(voice_channel.source)
         voice_channel.source.volume = 1
@@ -535,13 +539,19 @@ async def playPodcast(ctx):
 
 
 async def join(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     if not ctx.message.author.voice:
-        await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
-        return
+        if voice_client is None:
+            await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+            return
     else:
         channel = ctx.message.author.voice.channel
-    await channel.connect()
-
+        if voice_client is None:
+            await channel.connect()
+        else:
+            voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+            voice.stop()
+            print("is voice playing",voice.is_playing())
 
 @client.command(name='leave')
 async def leave(ctx):
