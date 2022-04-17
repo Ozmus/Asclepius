@@ -568,9 +568,13 @@ async def twitter(ctx):
                                            twitter_credentials['username'])
         sentiment_score = getSentimentResult(tweets)
         if sentiment_score > 0:
-            await ctx.send("Happy for you :)")
+            await ctx.send("I'm glad you're happy :smile:")
         else:
-            await ctx.send("Sorry for you :(")
+            await ctx.send("Dont worry, everything's gonna be alright :hugging:")
+        await ctx.send("Here is my movie and video suggestion for you :sunny:")
+        film = get_film(sentiment_score)
+        await ctx.send(embed=film)
+        await invokeYoutubeCommand(ctx, sentiment_score)
     except:
         isAuthorizedUser = False
 
@@ -592,9 +596,13 @@ async def twitter(ctx):
             tweets = getTweets(access_token, access_token_secret, screen_name)
             sentiment_score = getSentimentResult(tweets)
             if sentiment_score > 0:
-                await ctx.send("Happy for you :)")
+                await ctx.send("I'm glad you're happy :smile:")
             else:
-                await ctx.send("Sorry for you :(")
+                await ctx.send("Dont worry, everything's gonna be alright :hugging:")
+            await ctx.send("Here is my movie and video suggestion for you :sunny:")
+            film = get_film(sentiment_score)
+            await ctx.send(embed=film)
+            await invokeYoutubeCommand(ctx, sentiment_score)
 
 
 client.run(TOKEN)
