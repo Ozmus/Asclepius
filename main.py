@@ -176,7 +176,7 @@ async def natureSound(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     global currentSoundDirectory
     currentSoundDirectory = "sounds/natureSounds"
-    sounds = [f for f in listdir("sounds/natureSounds") if isfile(join("sounds/natureSounds", f))]
+    sounds = [f for f in listdir("sounds/natureSounds")]
     rand = random.randint(0, len(sounds))
     soundPath = "sounds/natureSounds/" + sounds[rand]
     if ctx.author.voice:
@@ -201,7 +201,7 @@ async def piano(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     global currentSoundDirectory
     currentSoundDirectory = "sounds/piano"
-    sounds = [f for f in listdir("sounds/piano") if isfile(join("sounds/piano", f))]
+    sounds = [f for f in listdir("sounds/piano")]
     rand = random.randint(0, len(sounds))
     soundPath = "sounds/piano/" + sounds[rand]
     if ctx.author.voice:
@@ -226,7 +226,7 @@ async def chill(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     global currentSoundDirectory
     currentSoundDirectory = "sounds/chill"
-    sounds = [f for f in listdir("sounds/chill") if isfile(join("sounds/chill", f))]
+    sounds = [f for f in listdir("sounds/chill")]
     rand = random.randint(0, len(sounds))
     soundPath = "sounds/chill/" + sounds[rand]
     if ctx.author.voice:
