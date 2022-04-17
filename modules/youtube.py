@@ -10,16 +10,13 @@ HAPPY_PLAYLIST_ID = "PL2gObORYlf32qkIQbOsqe_milOnorHpuu"
 
 def getVideoFromYoutube(searchTerm, type):
     response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?relevanceLanguage=en&part=snippet&type={type}&maxResults=10&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
-    # print(response)
     return response['items']
 
 def getVideoDetails(videoId):
     response = requests.get(f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=statistics&id={videoId}&key={YOUTUBE_API_KEY}').json()
-    # print(response)
     return response['items'][0]
 
 def createEmbedForYoutube(media, type):
-    # print(media)
     mediaTitle = media['snippet']['title']
     mediaAuthor = media['snippet']['channelTitle']
     mediaDescription = media['snippet']['description']
