@@ -74,6 +74,8 @@ commandList = {
     16: {"command": ">***imbored***", "description": "Asclepius give a suggestion if you are bored"},
     17: {"command": ">***randomAdvice***", "description": "Asclepius can give an advice"},
     18: {"command": ">***trivia***", "description": "Asclepius can ask a question with hidden answer!"},
+    19: {"command": "***>playPod***", "description": "Asclepius can play one of the popular podcasts."},
+    20: {"command": "***>playThePod {searchTerm}***", "description": "Asclepius can play given podcast."},
 }
 
 currentSoundDirectory = ""
@@ -649,6 +651,22 @@ async def playPodcast(ctx):
         await ctx.send("The bot is not connected to a voice channel.")
 
 
+@client.command(name='playThePod')
+async def playPodcastSpecified(ctx, *, arg):
+    await join(ctx)
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+
+        async with ctx.typing():
+            source = getPodcastSpecified(arg)
+            voice_channel.play(
+                discord.FFmpegPCMAudio(source=source))
+        await ctx.send('**Now playing:** {}'.format(source))
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
+
 async def join(ctx):
     voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     if not ctx.message.author.voice:
@@ -678,6 +696,17 @@ def getPodcast():
     response = requests.get("https://api.audioboom.com/audio_clips/popular")
     for audios in json.loads(response.text)['body']['audio_clips']:
         popular_podcast.append(audios['urls']['high_mp3'])
+
+
+def getPodcastSpecified(pod):
+    response = requests.get("https://api.audioboom.com/audio_clips?find[query]=*" + str(pod) + "*")
+    current_podcast = ""
+
+    for audios in json.loads(response.text)['body']['audio_clips']:
+        current_podcast = (audios['urls']['high_mp3'])
+        print(current_podcast)
+
+    return current_podcast
 
 
 @client.command()
