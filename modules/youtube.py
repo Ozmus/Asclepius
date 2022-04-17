@@ -1,11 +1,12 @@
 import requests
 import discord
 import os
-import random
 from dotenv import load_dotenv
 
 load_dotenv()
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+SAD_PLAYLIST_ID = "PL2gObORYlf30MDdc3JbP5S6wxZmxJsrW1"
+HAPPY_PLAYLIST_ID = "PL2gObORYlf32qkIQbOsqe_milOnorHpuu"
 
 def getVideoFromYoutube(searchTerm, type):
     response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?relevanceLanguage=en&part=snippet&type={type}&maxResults=10&q={searchTerm}&key={YOUTUBE_API_KEY}').json()
@@ -57,16 +58,31 @@ def createEmbedListForYoutube(searchTerm, type):
         embedList.append(createEmbedForYoutube(video, type))
     return embedList
 
-async def invokeYoutubeCommand(youtube, ctx, score):
-    happy = ['funny', 'funniest', 'happy people']
-    sad = ["motivational", "videos for depressed", "depressed watch this", "dont be sad", "you are great"]
+def getAsclepiusPlaylist(playlistId):
+    response = requests.get(f'https://youtube.googleapis.com/youtube/v3/playlists?part=snippet&type=playlist&id={playlistId}&key={YOUTUBE_API_KEY}').json()
+    return response['items'][0]
+
+async def invokeYoutubeCommand(ctx, score):
     if score <=0:
-        choice =  random.choice(sad)
-        # await ctx.invoke(client.get_command('youtube'), args=[choice])
-        await youtube(ctx, [choice])
+        playlist = getAsclepiusPlaylist(SAD_PLAYLIST_ID)
+        mediaDescription = playlist['snippet']['description']
+        mediaThumbnail = playlist['snippet']['thumbnails']['high']['url']
+        embed = discord.Embed(title="Stay strong, everthing will be great",
+                            url=f"https://www.youtube.com/playlist?list={SAD_PLAYLIST_ID}",
+                          description=mediaDescription,
+                          color=discord.Color.red())
+        embed.set_image(url=mediaThumbnail)
+        embed.set_author(name="Asclepius")              
+        await ctx.send(embed = embed)
     else:
-        choice =  random.choice(happy)
-        # await ctx.invoke(client.get_command('youtube'), args=[choice])
-        await youtube(ctx, [choice])
-    print(choice)
+        playlist = getAsclepiusPlaylist(HAPPY_PLAYLIST_ID)
+        mediaDescription = playlist['snippet']['description']
+        mediaThumbnail = playlist['snippet']['thumbnails']['high']['url']
+        embed = discord.Embed(title="It is greaaat!!",
+                            url=f"https://www.youtube.com/playlist?list={HAPPY_PLAYLIST_ID}",
+                          description=mediaDescription,
+                          color=discord.Color.red())
+        embed.set_image(url=mediaThumbnail)
+        embed.set_author(name="Asclepius")              
+        await ctx.send(embed = embed)
     
