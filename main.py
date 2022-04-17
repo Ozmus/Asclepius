@@ -1,7 +1,6 @@
 import random
 from os import listdir
 from os.path import isfile, join
-
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 
@@ -244,7 +243,6 @@ async def breathe(ctx):
         exerciseGif = discord.File(gif)
         await ctx.send(file=exerciseGif)
 
-
 # -p playlist, default video
 @client.command()
 async def youtube(ctx, *args):
@@ -254,7 +252,6 @@ async def youtube(ctx, *args):
     global embedListForYoutube
     global youtubeEmbedListIndex
     if (len(args) == 1):
-
         youtubeEmbedListIndex = 0
         embedListForYoutube = createEmbedListForYoutube(args[0], "video")
         msg = await ctx.send(embed=embedListForYoutube[youtubeEmbedListIndex])
