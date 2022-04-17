@@ -19,18 +19,20 @@ from dynamoDB.InsertTableEntry import *
 
 # TODO baska yere cekilecek konusulduktan sonra
 commandList = {
-    1: {"command": "newReleases", "description": "You can list the new releases of this week!"},
-    2: {"command": "createPlaylist", "description": "Asclepius can create a playlist  on spotify for you."},
-    3: {"command": "getMyPlaylists", "description": "Asclepius can get your playlist."},
-    4: {"command": "recommendMe", "description": "Asclepius' recommendations for you."},
-    5: {"command": "saveShow", "description": "Asclepius can save shows for you."},
-    6: {"command": "saveEp", "description": "Asclepius can save episodes for you."},
-    7: {"command": "getSong", "description": "Asclepius can play the song for you."},
-    8: {"command": "getAlbum", "description": "Asclepius can play the album for you."},
-    9: {"command": "showPlaylist", "description": "Asclepius can show the tracks in the playlist for you."},
-    10: {"command": "topTracks", "description": "Asclepius knows your favorite tracks!"},
-    11: {"command": "topArtists", "description": "Asclepius knows your favorite artists!"},
-    12: {"command": "priTalk", "description": "Asclepius can talk with you in dm!"}
+    1: {"command": "***>spotifyCommands***", "description": "Asclepius can list the spotify commands."},
+    2: {"command": "***>youtube searchTerm***", "description": "Asclepius can suggest a video from youtube about searchTerm."},
+    3: {"command": "***>youtube -p searchTerm***", "description": "Asclepius can suggest a playlist from youtube about searchTerm."},
+    4: {"command": "***>twitter***", "description": "Asclepius can look up your tweets to make a perfect movie and video suggestion for you."},
+    5: {"command": "***>movie***", "description": "Asclepius can suggest a movie for you."},
+    6: {"command": "***>getPoem***", "description": "Asclepius can read a poem for you."},
+    7: {"command": "***>makeJoke***", "description": "Asclepius can make a funny joke for you."},
+    8: {"command": "***>getQuote***", "description": "Asclepius can read a quote for you."},
+    9: {"command": "***>recipe***", "description": "Asclepius can show a delicious recipe for you."},
+    10: {"command": "***>playSound***", "description": "Asclepius can play a relaxing sound."},
+    11: {"command": "***>record***", "description": "Asclepius starts listening your voice (works in Server)."},
+    12: {"command": "***>stopRecord***", "description": "Asclepius finishes listening your voice (works in Server)."},
+    13: {"command": "***>mindfulness***", "description": "Asclepius can show you a mindfulness exercise."},
+    14: {"command": "***>breathe***", "description": "Asclepius shows you a breathe exercise with a gif"}
 }
 
 currentSoundDirectory = ""
@@ -39,6 +41,7 @@ load_dotenv()
 
 ints = discord.Intents.all()
 client = commands.Bot(command_prefix='>', intents=ints)
+client.remove_command("help")
 
 TOKEN = os.getenv('TOKEN')
 clientDynamoDB, dynamoDB = connectDynamoDB()
@@ -167,8 +170,12 @@ async def on_guild_join(guild):
         if channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed()
             embed.set_image(url="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Aesculap_147-.png/170px-Aesculap_147-.png")
-            embed.add_field(name="HEY!",value="`I'm Asclepius. I'm here to help you.` \n To list commands, you can write >help \n Also, we have voice bot to record your voice, if you don't want to write. This is the invite link: \n || https://discord.com/api/oauth2/authorize?client_id=964912868036329543&permissions=120325187904&scope=bot ||")
+            embed.add_field(name=">twitter",value="`I'm Asclepius. I'm here to help you.` \n To list commands, you can write >help \n "
+                                              "Also, we have voice bot to record your voice, if you don't want to write. This is the invite link: \n "
+                                              "|| https://discord.com/api/oauth2/authorize?client_id=964912868036329543&permissions=120325187904&scope=bot ||")
             await channel.send(embed=embed)
+            ctx = await client.get_context(guild)
+            await help(ctx)
         break
 
 
@@ -355,15 +362,14 @@ async def on_reaction_add(reaction, user):
             for reaction in reaction.message.reactions:
                 await reaction.remove(user)
 
-
 @client.command()
-async def commands(ctx):
+async def help(ctx):
     embed = discord.Embed(title="Commands",
                           description="Here's all the things Asclepius can do for you...",
                           color=discord.Color.blue())
 
     for id, command in commandList.items():
-        embed.add_field(name=command["command"], value=command["description"], inline=False)
+        embed.add_field(name=command["command"], value=command["description"], inline=True)
     await ctx.send(embed=embed)
 
 
@@ -526,14 +532,6 @@ async def play(ctx, url):
 
     except:
         await ctx.send("The bot is not connected to a voice channel.")
-
-
-@client.event
-async def on_guild_join(guild):
-    for channel in guild.text_channels:
-        if channel.permissions_for(guild.me).send_messages:
-            await channel.send('Hey there! this is the message i send when i join a server')
-        break
 
 
 @client.command(name='playPod')
