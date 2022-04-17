@@ -157,7 +157,7 @@ def checkIntent(ctx, intent, fulfillmentText):
 
 @client.command()
 async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await ctx.send(fullfillmentText)
 
 
@@ -292,7 +292,7 @@ async def resume(ctx):
 
 @client.command()
 async def breathe(ctx):
-    gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
+    gifs = [f for f in listdir("breatheExerciseGif")]
     rand = random.randrange(0, len(gifs))
     gifPath = "breatheExerciseGif/" + gifs[rand]
     with open(gifPath, 'rb') as gif:
@@ -386,7 +386,7 @@ async def on_message(msg):
     if msg.author == client.user:
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
-        _, fullfillmentText, _ = detectIntent(msg.cont)
+        _, fullfillmentText, _ = detectIntent(msg.content)
         await msg.channel.send(fullfillmentText)
 
     await client.process_commands(msg)
