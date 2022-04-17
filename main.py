@@ -152,7 +152,6 @@ async def playSound(ctx):
     embed.add_field(name=client.command_prefix + "chill", value="Plays chill musics")
     embed.add_field(name=client.command_prefix + "pause", value="To pause sound")
     embed.add_field(name=client.command_prefix + "resume", value="To resume sound")
-    embed.add_field(name=client.command_prefix + "changeSound", value="To change sound")
     embed.add_field(name=client.command_prefix + "stop", value="To stop sound and bot leaves")
     await ctx.send(embed=embed)
 
@@ -271,24 +270,6 @@ async def on_voice_state_update(member, before, after):
 
     if len(voice_state.channel.members) == 1:
         await voice_state.disconnect()
-
-
-@client.command()
-async def changeSound(ctx):
-    sounds = [f for f in listdir(currentSoundDirectory)]
-    rand = random.randint(0, len(sounds))
-    soundPath = currentSoundDirectory + "/" + sounds[rand]
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-
-    if ctx.author.voice:
-        if voice.is_playing() or voice.is_paused():
-            voice.stop()
-            source = FFmpegPCMAudio(soundPath)
-            player = voice.play(source)
-        else:
-            await ctx.send("There is no audio playing in the voice channel")
-    else:
-        await ctx.send("Please join a voice channel and try again :)")
 
 
 @client.command()
