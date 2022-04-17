@@ -429,7 +429,6 @@ async def newReleases(ctx):
 
 @client.command(name="recommendMe")
 async def recommendation(ctx, *, arg1):
-    print(arg1)
     embed = discord.Embed(title="New Releases",
                           description="Recommendations from ASCLEPIUS ( ͡~ ͜ʖ ͡°)",
                           color=discord.Color.dark_gold())
@@ -442,7 +441,6 @@ async def recommendation(ctx, *, arg1):
 
 @client.event
 async def on_member_join(member):
-    print(member)
     await member.create_dm()
     await member.dm_channel.send(f'Hi {member.name} welcome!.')
 
