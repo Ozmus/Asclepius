@@ -160,6 +160,9 @@ async def playSound(ctx):
 async def checkIntent(ctx, intent, fulfillmentText):
     if (intent == 'Twitter'):
         await twitter(ctx)
+    elif(intent == 'Youtube'):
+        await youtubeCommandInfo(ctx)
+
 
 
 @client.command()
@@ -395,7 +398,7 @@ async def on_message(msg):
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
         detectedIntent, fullfillmentText, _ = detectIntent(msg.content)
-        await msg.channel.send(fullfillmentText)
+        if detectedIntent.display_name != "Youtube":  await msg.channel.send(fullfillmentText)
         await checkIntent(ctx, detectedIntent.display_name, fullfillmentText)
 
     await client.process_commands(msg)
