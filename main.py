@@ -283,6 +283,9 @@ async def checkIntent(ctx, intent, fullfillmentText):
     elif intent == 'Bad Feelings':
         await ctx.send('You can use these command to feel better.')
         await help(ctx)
+    elif intent == 'Movie':
+        film = get_film()
+        await ctx.send(embed=film)
 
 
 @client.command()
