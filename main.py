@@ -414,7 +414,6 @@ async def youtube(ctx, *args):
     if (len(args) == 0):
         await ctx.send("Please give an argument")
         return
-
     global embedListForYoutube
     global youtubeEmbedListIndex
     if (len(args) == 1):
