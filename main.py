@@ -271,9 +271,9 @@ async def checkIntent(ctx, intent, fullfillmentText):
     elif intent == 'newReleases':
         await newReleases(ctx)
     elif intent == 'recommend':
-        await recommendation(ctx, "happy")
+        await recommendation(ctx=ctx, arg1="happy")
     elif intent == 'recommend Sad':
-        await recommendation(ctx, "sad")
+        await recommendation(ctx=ctx, arg1="sad")
     elif intent == 'topArtists':
         await getTopArtists(ctx)
     elif intent == 'topTracks':
@@ -636,10 +636,11 @@ async def playWithUrl(ctx, url):
     except:
         await ctx.send("The bot is not connected to a voice channel.")
 
+
 @client.command(name='play')
 async def play(ctx, *, searchTerm):
     await join(ctx)
-    videos = getVideoFromYoutube(searchTerm,"video")
+    videos = getVideoFromYoutube(searchTerm, "video")
     videoId = videos[0]['id']['videoId']
     url = f"https://www.youtube.com/watch?v={videoId}"
     try:
@@ -652,7 +653,6 @@ async def play(ctx, *, searchTerm):
         voice_channel.source.volume = 1
     except:
         await ctx.send("The bot is not connected to a voice channel.")
-
 
 
 @client.command(name='playPod')
