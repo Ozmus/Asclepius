@@ -292,7 +292,7 @@ async def resume(ctx):
 
 @client.command()
 async def breathe(ctx):
-    gifs = [f for f in listdir("breatheExerciseGif") if isfile(join("breatheExerciseGif", f))]
+    gifs = [f for f in listdir("breatheExerciseGif")]
     rand = random.randrange(0, len(gifs))
     gifPath = "breatheExerciseGif/" + gifs[rand]
     with open(gifPath, 'rb') as gif:
