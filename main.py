@@ -18,6 +18,35 @@ from dynamoDB.DynamoDBService import *
 from dynamoDB.GetTableEntry import *
 from dynamoDB.InsertTableEntry import *
 
+spotifyCommandList = {
+    1: {"command": "***>newReleases***", "description": "You can list the new releases of this week!"},
+    2: {"command": "***>createPlaylist***", "description": "Asclepius can create a playlist  on spotify for you."},
+    3: {"command": "***>getMyPlaylists***", "description": "Asclepius can get your playlist."},
+    4: {"command": "***>recommendMe***", "description": "Asclepius' recommendations for you."},
+    5: {"command": "***>saveShow***", "description": "Asclepius can save shows for you."},
+    6: {"command": "***>saveEp***", "description": "Asclepius can save episodes for you."},
+    7: {"command": "***>getSong***", "description": "Asclepius can play the song for you."},
+    8: {"command": "***>getAlbum***", "description": "Asclepius can play the album for you."},
+    9: {"command": "***>showPlaylist***", "description": "Asclepius can show the tracks in the playlist for you."},
+    10: {"command": "***>topTracks***", "description": "Asclepius knows your favorite tracks!"},
+    11: {"command": "***>topArtists***", "description": "Asclepius knows your favorite artists!"},
+    12: {"command": ">***priTalk***", "description": "Asclepius can talk with you in dm!"},
+    13: {"command": "***topArtists-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say:\n- where are my top artists?\n- top artists\n- show me my top artists\n- who are my top artists?"},
+    14: {"command": "***topTracks-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say:\n- what are my top tracks?\n- top tracks\n- show me my top tracks\n- where are my top tracks?"},
+    15: {"command": "***createPlaylist-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say:\n- create new playlist\n- send me new playlist\n- I want new playlist\n- I want a playlist\n- create playlist for me"},
+    16: {"command": "***getPlaylist-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say: get my playlists"},
+    17: {"command": "***newReleases-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say: \n- send me new releases\n- show me new releases\n- what are the new releases\n- new releases"},
+    18: {"command": "***recommend-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say: \n- recommend me something happy\n- recommend me something energetic\n- recommend me something fun"},
+    19: {"command": "***recommend Sad-Voice Of Asclepius***",
+         "description": "You can call voice of asclepius and say: \n- dark songs\n- sad songs\n- recommendme dark songs\n- recommend me sad songs"}
+}
+
 # TODO baska yere cekilecek konusulduktan sonra
 commandList = {
     1: {"command": "***>spotifyCommands***", "description": "Asclepius can list the spotify commands."},
@@ -160,13 +189,6 @@ async def playSound(ctx):
     await ctx.send(embed=embed)
 
 
-async def checkIntent(ctx, intent, fulfillmentText):
-    if (intent == 'Twitter'):
-        await twitter(ctx)
-    elif(intent == 'Youtube'):
-        await youtubeCommandInfo(ctx)
-
-
 @client.event
 async def on_guild_join(guild):
     for channel in guild.text_channels:
@@ -185,7 +207,29 @@ async def on_guild_join(guild):
 @client.command()
 async def stopRecord(ctx):
     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
+    await checkIntent(ctx, detectedIntent.display_name, fullfillmentText)
+
+
+async def checkIntent(ctx, intent, fullfillmentText):
     await ctx.send(fullfillmentText)
+    if intent == 'createPlaylist':
+        await createPlaylist(ctx)
+    elif intent == 'newReleases':
+        await newReleases(ctx)
+    elif intent == 'recommend':
+        await recommendation(ctx, "happy")
+    elif intent == 'recommend Sad':
+        await recommendation(ctx, "sad")
+    elif intent == 'topArtists':
+        await getTopArtists(ctx)
+    elif intent == 'topTracks':
+        await getTopTracks(ctx)
+    elif intent == 'getPlaylist':
+        await getTopTracks(ctx)
+    elif intent == 'Twitter':
+        await twitter(ctx)
+    elif intent == 'Youtube':
+        await youtubeCommandInfo(ctx)
 
 
 @client.command()
@@ -360,6 +404,17 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
+@client.command()
+async def spotifyCommands(ctx):
+    embed = discord.Embed(title="Spotify Commands",
+                          description="Here's all the things Asclepius can do for you...",
+                          color=discord.Color.blue())
+
+    for id, command in spotifyCommandList.items():
+        embed.add_field(name=command["command"], value=command["description"], inline=True)
+    await ctx.send(embed=embed)
+
+
 @client.command(name="newReleases")
 async def newReleases(ctx):
     embed = discord.Embed(title="New Releases",
@@ -412,7 +467,7 @@ async def on_message(msg):
 
 
 @client.command(name="createPlaylist")
-async def createPlaylist(ctx, arg1):
+async def createPlaylist(ctx, arg1="happy"):
     embed = discord.Embed(title="NEW PLAYLIST",
                           description="ENJOY! -> " + spotify.createPlaylistForUser(arg1),
                           color=discord.Color.dark_gold())
