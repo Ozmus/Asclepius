@@ -76,6 +76,8 @@ commandList = {
     18: {"command": ">***trivia***", "description": "Asclepius can ask a question with hidden answer!"},
     19: {"command": "***>playPod***", "description": "Asclepius can play one of the popular podcasts."},
     20: {"command": "***>playThePod {searchTerm}***", "description": "Asclepius can play given podcast."},
+    21: {"command": "***>playWithUrl***", "description": "Asclepius can play video with the given url"},
+    22: {"command": "***>play {searchTerm}***", "description": "Asclepius can search and play given search term"},
 }
 
 currentSoundDirectory = ""
@@ -619,20 +621,38 @@ async def getTrack(ctx, *, arg1):
     await ctx.send(embed=embed)
 
 
-@client.command(name='playSong')
-async def play(ctx, url):
+@client.command(name='playWithUrl')
+async def playWithUrl(ctx, url):
     await join(ctx)
     try:
         server = ctx.message.guild
         voice_channel = server.voice_client
         song_info = ytdl.extract_info(url, download=False)
-        time.sleep(4)
+        time.sleep(1)
         voice_channel.play(discord.FFmpegPCMAudio(song_info["formats"][0]["url"]))
         voice_channel.source = discord.PCMVolumeTransformer(voice_channel.source)
         voice_channel.source.volume = 1
 
     except:
         await ctx.send("The bot is not connected to a voice channel.")
+
+@client.command(name='play')
+async def play(ctx, *, searchTerm):
+    await join(ctx)
+    videos = getVideoFromYoutube(searchTerm,"video")
+    videoId = videos[0]['id']['videoId']
+    url = f"https://www.youtube.com/watch?v={videoId}"
+    try:
+        server = ctx.message.guild
+        voice_channel = server.voice_client
+        song_info = ytdl.extract_info(url, download=False)
+        time.sleep(1)
+        voice_channel.play(discord.FFmpegPCMAudio(song_info["formats"][0]["url"]))
+        voice_channel.source = discord.PCMVolumeTransformer(voice_channel.source)
+        voice_channel.source.volume = 1
+    except:
+        await ctx.send("The bot is not connected to a voice channel.")
+
 
 
 @client.command(name='playPod')
