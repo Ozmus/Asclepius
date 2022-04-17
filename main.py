@@ -7,6 +7,7 @@ import discord
 import youtube_dl as youtube_dl
 from discord import FFmpegPCMAudio
 from discord.ext import commands
+from randfacts import randfacts
 
 import modules.spotipyApi as spotify
 from modules.TheMovieDatabase import *
@@ -44,7 +45,11 @@ spotifyCommandList = {
     18: {"command": "***recommend-Voice Of Asclepius***",
          "description": "You can call voice of asclepius and say: \n- recommend me something happy\n- recommend me something energetic\n- recommend me something fun"},
     19: {"command": "***recommend Sad-Voice Of Asclepius***",
-         "description": "You can call voice of asclepius and say: \n- dark songs\n- sad songs\n- recommendme dark songs\n- recommend me sad songs"}
+         "description": "You can call voice of asclepius and say: \n- dark songs\n- sad songs\n- recommendme dark songs\n- recommend me sad songs"},
+    20: {"command": ">***randomFact***", "description": "Asclepius gives a random fact"},
+    21: {"command": ">***imbored***", "description": "Asclepius give a suggestion if you are bored"},
+    22: {"command": ">***randomAdvice***", "description": "Asclepius can give an advice"},
+    23: {"command": ">***trivia***", "description": "Asclepius can ask a question with hidden answer!"},
 }
 
 # TODO baska yere cekilecek konusulduktan sonra
@@ -206,9 +211,36 @@ async def on_guild_join(guild):
 
 @client.command()
 async def stopRecord(ctx):
+    await ctx.send("Please wait..")
     detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await checkIntent(ctx, detectedIntent.display_name, fullfillmentText)
 
+
+@client.command()
+async def randomFact(ctx):
+    x = randfacts.get_fact()
+    await ctx.send(x)
+
+@client.command()
+async def randomAdvice(ctx):
+    response = requests.get('https://api.adviceslip.com/advice')
+    r = response.json()
+    embed = discord.Embed(title=":sweat_smile: :thinking: :smile:", description="***"+r['slip']['advice']+"***", color=discord.Color.random())
+    await ctx.send(embed=embed)
+
+@client.command()
+async def imbored(ctx):
+    response = requests.get('https://www.boredapi.com/api/activity/')
+    r = response.json()
+    embed = discord.Embed(title="Are you BORED?! :zany_face:", description="```"+r['activity']+"```", color=discord.Color.random())
+    await ctx.send(embed=embed)
+
+@client.command()
+async def trivia(ctx):
+    response = requests.get('https://opentdb.com/api.php?amount=1')
+    r = response.json()
+    embed = discord.Embed(title=" :thinking_face: ***" +r['results'][0]['question']+ "***", description=" *** The answer is ||"+r['results'][0]['correct_answer']+"|| ***", color=discord.Color.random())
+    await ctx.send(embed=embed)
 
 async def checkIntent(ctx, intent, fullfillmentText):
     await ctx.send(fullfillmentText)
