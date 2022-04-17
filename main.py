@@ -386,7 +386,7 @@ async def on_message(msg):
     if msg.author == client.user:
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
-        _, fullfillmentText, _ = detectIntent(msg.cont)
+        _, fullfillmentText, _ = detectIntent(msg.content)
         await msg.channel.send(fullfillmentText)
 
     await client.process_commands(msg)
