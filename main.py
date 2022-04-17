@@ -81,6 +81,13 @@ async def makeJoke(ctx):
     embed = discord.Embed(description=data[rand]['body'])
     await ctx.send(embed=embed)
 
+@client.command()
+async def mindfulness(ctx):
+    f = open("mindfulness/jsonformatter.json")
+    data = json.load(f)
+    rand = random.randint(0, len(data))
+    embed = discord.Embed(title="***"+ data[rand]['title']+"***", description="`"+ data[rand]['instr']+"`")
+    await ctx.send(embed=embed)
 
 @client.command()
 async def movie(ctx):
