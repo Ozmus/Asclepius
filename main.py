@@ -150,9 +150,9 @@ async def playSound(ctx):
     await ctx.send(embed=embed)
 
 
-def checkIntent(ctx, intent, fulfillmentText):
+async def checkIntent(ctx, intent, fulfillmentText):
     if (intent == 'Twitter'):
-        twitter(ctx)
+        await twitter(ctx)
 
 
 @client.command()
@@ -383,11 +383,13 @@ async def on_member_join(member):
 
 @client.event
 async def on_message(msg):
+    ctx = await client.get_context(msg)
     if msg.author == client.user:
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
-        _, fullfillmentText, _ = detectIntent(msg.content)
+        detectedIntent, fullfillmentText, _ = detectIntent(msg.content)
         await msg.channel.send(fullfillmentText)
+        await checkIntent(ctx, detectedIntent.display_name, fullfillmentText)
 
     await client.process_commands(msg)
 
