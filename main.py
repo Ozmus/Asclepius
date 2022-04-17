@@ -157,7 +157,7 @@ def checkIntent(ctx, intent, fulfillmentText):
 
 @client.command()
 async def stopRecord(ctx):
-    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord(ctx)
+    detectedIntent, fullfillmentText, sentimentScore = stopSoundRecord()
     await ctx.send(fullfillmentText)
 
 
