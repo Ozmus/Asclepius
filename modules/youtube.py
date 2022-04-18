@@ -85,7 +85,7 @@ async def invokeYoutubeCommand(ctx, score):
     
 async def youtubeCommandInfo(ctx) :
         embed = discord.Embed(title="Info",
-                          description="To get a video please use the youtube command.",
+                          description="To get a video please use the command in Server, not DM!",
                           color=discord.Color.blue())
         embed.add_field(name="Usage", value=">youtube searchTerm", inline=True)
         embed.add_field(name="Usage for Playlists", value=">youtube -p searchTerm", inline=True)

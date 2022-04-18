@@ -265,7 +265,7 @@ async def trivia(ctx):
 
 
 async def checkIntent(ctx, intent, fullfillmentText):
-    await ctx.send(fullfillmentText)
+    if intent != "Youtube":  await ctx.send(fullfillmentText)
     if intent == 'createPlaylist':
         await createPlaylist(ctx)
     elif intent == 'newReleases':
@@ -513,7 +513,6 @@ async def on_message(msg):
         return
     if isinstance(msg.channel, discord.channel.DMChannel):
         detectedIntent, fullfillmentText, _ = detectIntent(msg.content)
-        if detectedIntent.display_name != "Youtube":  await msg.channel.send(fullfillmentText)
         await checkIntent(ctx, detectedIntent.display_name, fullfillmentText)
 
     await client.process_commands(msg)
